@@ -21,7 +21,7 @@ public class MindWavePacket {
 
     private static final Logger LOG = Logger.getLogger(MindWavePacket.class.getName());
 
-    private final int attention, meditation, delta, theta, lowAlpha, highAlpha, lowBeta, highBeta, lowGamma, highGamma,
+    private final double attention, meditation, mentalEffort, familiarity, delta, theta, lowAlpha, highAlpha, lowBeta, highBeta, lowGamma, highGamma,
             blinkStrength, poorSignalLevel;
     private final ZonedDateTime creationTime;
 
@@ -37,22 +37,22 @@ public class MindWavePacket {
             JSONObject packet = new JSONObject(originText);
             if (packet.has("eSense")) {
                 JSONObject eSense = packet.getJSONObject("eSense");
-                this.attention = eSense.getInt("attention");
-                this.meditation = eSense.getInt("meditation");
+                this.attention = eSense.getDouble("attention");
+                this.meditation = eSense.getDouble("meditation");
             } else {
                 this.attention = -1;
                 this.meditation = -1;
             }
             if (packet.has("eegPower")) {
                 JSONObject eegPower = packet.getJSONObject("eegPower");
-                this.delta = eegPower.getInt("delta");
-                this.theta = eegPower.getInt("theta");
-                this.lowAlpha = eegPower.getInt("lowAlpha");
-                this.highAlpha = eegPower.getInt("highAlpha");
-                this.lowBeta = eegPower.getInt("lowBeta");
-                this.highBeta = eegPower.getInt("highBeta");
-                this.lowGamma = eegPower.getInt("lowGamma");
-                this.highGamma = eegPower.getInt("highGamma");
+                this.delta = eegPower.getDouble("delta");
+                this.theta = eegPower.getDouble("theta");
+                this.lowAlpha = eegPower.getDouble("lowAlpha");
+                this.highAlpha = eegPower.getDouble("highAlpha");
+                this.lowBeta = eegPower.getDouble("lowBeta");
+                this.highBeta = eegPower.getDouble("highBeta");
+                this.lowGamma = eegPower.getDouble("lowGamma");
+                this.highGamma = eegPower.getDouble("highGamma");
             } else {
                 this.delta = -1;
                 this.theta = -1;
@@ -73,14 +73,39 @@ public class MindWavePacket {
             } else {
                 this.blinkStrength = -1;
             }
+            if (packet.has("mentalEffort")) {
+                this.mentalEffort = packet.getInt("mentalEffort");
+            } else {
+                this.mentalEffort = -1;
+            }
+            if (packet.has("familiarity")) {
+                this.familiarity = packet.getInt("familiarity");
+            } else {
+                this.familiarity = -1;
+            }
         } catch (JSONException js) {
             throw new IllegalStateException("Unanticipated exception from JSON reading", js);
         }
     }
 
+    /**
+     * Returns this {@link MindWavePacket} in the form of:
+     * ATTENTION|MEDITATION|DELTA|THETA|LOWALPHA|HIGHALPHA|LOWBETA|HIGHBETA|LOWGAMMA|HIGHGAMMA|
+     * POORSIGNALLEVEL|BLINKSTRENGTH for transmission to MAXMSP in the form of a
+     * UDP packet.
+     *
+     * @return
+     */
+    public String toByteString() {
+        return this.attention + "|" + this.meditation + "|" + this.mentalEffort + "|" + this.familiarity + "|" + this.delta + "|" + this.theta + "|"
+                + this.lowAlpha + "|" + this.highAlpha + "|" + this.lowBeta + "|" + this.highBeta + "|" + this.lowGamma
+                + "|" + this.highGamma + "|" + this.poorSignalLevel + "|" + this.blinkStrength;
+    }
+
     @Override
     public String toString() {
         return "Mind Wave Mobile Packet: " + LocalTime.now() + "\n\neSense:\n\nAttention: " + attention + "\nMeditation: " + meditation
+                + "\nMental Effort: " + this.mentalEffort + "\n Familiarity: " + this.familiarity
                 + "\n\nEEG Power:\n\nDelta: " + delta + "\nTheta: " + theta + "\nLow Alpha: " + lowAlpha + "\nHigh Alpha: " + highAlpha
                 + "\nLow Beta: " + lowBeta + "\nHigh Beta: " + highBeta + "\nLow Gamma: " + lowGamma + "\nHigh Gamma: " + highGamma
                 + "\n\nPoor Signal Level: " + this.poorSignalLevel + "\n\nBlink Strength: " + this.blinkStrength;
