@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.protonmail.sarahszabo.mindwavemobiledataserver.core;
+package com.protonmail.sarahszabo.mindwavemobiledataserver.core.mindwave;
 
 import java.time.LocalTime;
 import java.util.logging.Logger;
@@ -19,12 +19,23 @@ public class MindWavePacket {
 
     private static final Logger LOG = Logger.getLogger(MindWavePacket.class.getName());
 
-    private final double attention, meditation, mentalEffort, familiarity, delta, theta, lowAlpha, highAlpha, lowBeta, highBeta, lowGamma, highGamma,
-            blinkStrength, poorSignalLevel;
+    private final double attention, meditation, mentalEffort, familiarity, delta, theta,
+            lowAlpha, highAlpha, lowBeta, highBeta, lowGamma, highGamma, blinkStrength, poorSignalLevel;
     private final LocalTime creationTime;
 
-    private final int MINDWAVE_DEFAULT_NULL_VALUE = 0;
+    private final boolean isBlinkPacketOnly;
+    private final ThinkGearServerConnectionQuality isPoorConnectionQuality;
 
+    /**
+     * The default value for all fields of the "double" type.
+     */
+    public final double MINDWAVE_DEFAULT_NULL_VALUE = 0;
+
+    /**
+     * The constructor that accepts raw JSON text from the ThinkGear Connector.
+     *
+     * @param originText The raw JSON text from the ThinkGear Connector
+     */
     public MindWavePacket(String originText) {
         /*
          Sample JSON Data:
@@ -82,6 +93,23 @@ public class MindWavePacket {
         } else {
             this.familiarity = MINDWAVE_DEFAULT_NULL_VALUE;
         }
+
+        /*
+        We consider this a "Blink Only" packet if basically everything is 0, set values according to TGC Spec
+        Values are 0-200
+        0: Good
+        200: Disconnected
+         */
+        this.isBlinkPacketOnly = (this.highAlpha == 0) && (this.attention == 0) && (this.meditation == 0);
+        if (this.poorSignalLevel == 0) {
+            this.isPoorConnectionQuality = ThinkGearServerConnectionQuality.OPTIMAL;
+        } else if (this.poorSignalLevel > 0 && this.poorSignalLevel < 100) {
+            this.isPoorConnectionQuality = ThinkGearServerConnectionQuality.SUB_OPTIMAL;
+        } else if (this.poorSignalLevel > 100 && this.poorSignalLevel < 200) {
+            this.isPoorConnectionQuality = ThinkGearServerConnectionQuality.POOR;
+        } else {
+            this.isPoorConnectionQuality = ThinkGearServerConnectionQuality.DISCONNECTED;
+        }
     }
 
     /**
@@ -100,11 +128,164 @@ public class MindWavePacket {
 
     @Override
     public String toString() {
-        return "Mind Wave Mobile Packet: " + this.creationTime + "\n\neSense:\n\nAttention: " + attention + "\nMeditation: " + meditation
-                + "\nMental Effort: " + this.mentalEffort + "\n Familiarity: " + this.familiarity
+        return "Mind Wave Mobile 2 Data Packet: " + this.creationTime + "\n\neSense:\n\nAttention: " + attention + "\nMeditation: " + meditation
+                + "\nMental Effort: " + this.mentalEffort + "\nFamiliarity: " + this.familiarity
                 + "\n\nEEG Power:\n\nDelta: " + delta + "\nTheta: " + theta + "\nLow Alpha: " + lowAlpha + "\nHigh Alpha: " + highAlpha
                 + "\nLow Beta: " + lowBeta + "\nHigh Beta: " + highBeta + "\nLow Gamma: " + lowGamma + "\nHigh Gamma: " + highGamma
                 + "\n\nPoor Signal Level: " + this.poorSignalLevel + "\n\nBlink Strength: " + this.blinkStrength;
+    }
+
+    /**
+     * Gets this field
+     *
+     * @return This field
+     */
+    public double getAttention() {
+        return this.attention;
+    }
+
+    /**
+     * Gets this field
+     *
+     * @return This field
+     */
+    public double getMeditation() {
+        return this.meditation;
+    }
+
+    /**
+     * Gets this field
+     *
+     * @return This field
+     */
+    public double getMentalEffort() {
+        return this.mentalEffort;
+    }
+
+    /**
+     * Gets this field
+     *
+     * @return This field
+     */
+    public double getFamiliarity() {
+        return this.familiarity;
+    }
+
+    /**
+     * Gets this field
+     *
+     * @return This field
+     */
+    public double getDelta() {
+        return this.delta;
+    }
+
+    /**
+     * Gets this field
+     *
+     * @return This field
+     */
+    public double getTheta() {
+        return this.theta;
+    }
+
+    /**
+     * Gets this field
+     *
+     * @return This field
+     */
+    public double getLowAlpha() {
+        return this.lowAlpha;
+    }
+
+    /**
+     * Gets this field
+     *
+     * @return This field
+     */
+    public double getHighAlpha() {
+        return this.highAlpha;
+    }
+
+    /**
+     * Gets this field
+     *
+     * @return This field
+     */
+    public double getLowBeta() {
+        return this.lowBeta;
+    }
+
+    /**
+     * Gets this field
+     *
+     * @return This field
+     */
+    public double getHighBeta() {
+        return this.highBeta;
+    }
+
+    /**
+     * Gets this field
+     *
+     * @return This field
+     */
+    public double getLowGamma() {
+        return this.lowGamma;
+    }
+
+    /**
+     * Gets this field
+     *
+     * @return This field
+     */
+    public double getHighGamma() {
+        return this.highGamma;
+    }
+
+    /**
+     * Gets this field
+     *
+     * @return This field
+     */
+    public double getBlinkStrength() {
+        return this.blinkStrength;
+    }
+
+    /**
+     * Gets this field
+     *
+     * @return This field
+     */
+    public double getPoorSignalLevel() {
+        return this.poorSignalLevel;
+    }
+
+    /**
+     * Gets this field
+     *
+     * @return This field
+     */
+    public LocalTime getCreationTime() {
+        return this.creationTime;
+    }
+
+    /**
+     * Gets this field
+     *
+     * @return This field
+     */
+    public boolean isBlinkPacketOnly() {
+        return this.isBlinkPacketOnly;
+    }
+
+    /**
+     * Gets this field
+     *
+     * @return This field
+     */
+    public ThinkGearServerConnectionQuality isPoorConnectionQuality() {
+        return this.isPoorConnectionQuality;
     }
 
 }
