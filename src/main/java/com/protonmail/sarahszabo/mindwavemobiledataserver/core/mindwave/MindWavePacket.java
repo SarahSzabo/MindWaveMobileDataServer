@@ -23,7 +23,7 @@ public class MindWavePacket {
             lowAlpha, highAlpha, lowBeta, highBeta, lowGamma, highGamma, blinkStrength, poorSignalLevel;
     private final LocalTime creationTime;
 
-    private final boolean isBlinkPacketOnly;
+    private final boolean isBlinkOnly, hasESense;
     private final ThinkGearServerConnectionQuality isPoorConnectionQuality;
 
     /**
@@ -100,12 +100,13 @@ public class MindWavePacket {
         0: Good
         200: Disconnected
          */
-        this.isBlinkPacketOnly = (this.highAlpha == 0) && (this.attention == 0) && (this.meditation == 0);
+        this.isBlinkOnly = (this.highAlpha == 0) && (this.attention == 0) && (this.meditation == 0);
+        this.hasESense = (this.attention != 0) && (this.meditation != 0);
         if (this.poorSignalLevel == 0) {
             this.isPoorConnectionQuality = ThinkGearServerConnectionQuality.OPTIMAL;
-        } else if (this.poorSignalLevel > 0 && this.poorSignalLevel < 100) {
+        } else if (this.poorSignalLevel > 0 && this.poorSignalLevel <= 50) {
             this.isPoorConnectionQuality = ThinkGearServerConnectionQuality.SUB_OPTIMAL;
-        } else if (this.poorSignalLevel > 100 && this.poorSignalLevel < 200) {
+        } else if (this.poorSignalLevel > 50 && this.poorSignalLevel < 200) {
             this.isPoorConnectionQuality = ThinkGearServerConnectionQuality.POOR;
         } else {
             this.isPoorConnectionQuality = ThinkGearServerConnectionQuality.DISCONNECTED;
@@ -275,8 +276,8 @@ public class MindWavePacket {
      *
      * @return This field
      */
-    public boolean isBlinkPacketOnly() {
-        return this.isBlinkPacketOnly;
+    public boolean isBlinkOnly() {
+        return this.isBlinkOnly;
     }
 
     /**
@@ -286,6 +287,15 @@ public class MindWavePacket {
      */
     public ThinkGearServerConnectionQuality isPoorConnectionQuality() {
         return this.isPoorConnectionQuality;
+    }
+
+    /**
+     * Gets this field
+     *
+     * @return This field
+     */
+    public boolean hasESense() {
+        return this.hasESense;
     }
 
 }

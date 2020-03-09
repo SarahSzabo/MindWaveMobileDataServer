@@ -2,6 +2,93 @@
  * Empty Stylesheet file.
  */
 
+/*
 .mainFxmlClass {
 
 }
+.menu-bar {
+    -fx-background-color: #0E100E;
+}
+.menu {
+    -fx-background-color: #0E100E;
+}
+.menu-item{
+    -fx-background-color: #0E100E;
+}
+.stacked-area-chart{
+    -fx-background-color: #0E100E;
+}
+
+.border-pane{
+    -fx-background-color: fuchsia;
+}
+.chart .chart-title{
+    -fx-background-color: COLOR-10;
+    -fx-text-fill: COLOR-3;
+    -fx-font-size: 30.0;
+    -fx-border-width: 0.0;
+    -fx-border-color: transparent;
+}
+
+.chart-series-area-line {
+    -fx-stroke-width: 2px;
+    -fx-stroke-color: pink;
+}
+
+.default-color0.chart-series-area-line {
+    -fx-stroke: COLOR-10;
+}
+
+.default-color0.chart-series-area-fill {
+    -fx-fill: COLOR-10;
+}
+
+
+.chart-area-symbol{-fx-background-radius: 0;}
+
+.chart{
+    -fx-border-width: 0;
+    -fx-legend-visible: false;
+    -fx-background-color: #010101;
+    -fx-create-symbols: false;
+    -fx-background-color: COLOR-18;
+    -fx-padding: 0;
+    -fx-bar-gap: 2.0;
+    -fx-border-width: 0;
+    -fx-category-gap: 0.0;
+    -fx-alternative-column-fill-visible: false;
+    -fx-alternative-row-fill-visible: false;
+    -fx-horizontal-grid-lines-visible: false;
+    -fx-horizontal-zero-line-visible: true;
+    -fx-vertical-grid-lines-visible: false;
+    -fx-vertical-zero-line-visible: true;
+}
+
+.chart-content{
+    -fx-background-color: COLOR-20;
+    -fx-border-width: 0;
+}
+
+.plot-content{
+    -fx-background-color: red;
+    -fx-text-fill: COLOR-3;
+}
+
+.chart-plot-background{
+    -fx-background-color: COLOR-18;
+}
+
+.axis{
+    -fx-border-width: 0;
+    -fx-background-color: COLOR-16;
+    //-fx-tick-label-font-family:
+    //-fx-tick-label-font-size:
+    -fx-tick-label-fill: COLOR-3;}
+
+.axis .axis-label {
+    -fx-background-color: COLOR-17;
+    -fx-text-fill: COLOR-3;
+    -fx-font-size: 15;
+    -fx-border-width: 0.0;
+    -fx-border-color: transparent;
+}*/

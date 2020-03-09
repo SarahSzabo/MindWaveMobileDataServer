@@ -1,47 +1,65 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import java.net.URL?>
-<?import javafx.scene.chart.AreaChart?>
-<?import javafx.scene.chart.CategoryAxis?>
 <?import javafx.scene.chart.NumberAxis?>
+<?import javafx.scene.chart.StackedAreaChart?>
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
 
-<AnchorPane id="AnchorPane" prefHeight="727.0" prefWidth="821.0" styleClass="mainFxmlClass" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.protonmail.sarahszabo.mindwavemobiledataserver.core.ui.mindwaveviewer.MindwaveViewer">
+<AnchorPane id="AnchorPane" prefHeight="727.0" prefWidth="821.0" styleClass="mainFxmlClass" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1">
     <stylesheets>
         <URL value="@mindwaveviewerfxml.css" />
     </stylesheets>
    <children>
       <BorderPane fx:id="baseGridPane" layoutX="200.0" layoutY="-128.0" prefHeight="550.0" prefWidth="711.0" style="-fx-background-color: black;" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-         <bottom>
-            <AreaChart fx:id="brainwaveChart" title="Brainwaves" BorderPane.alignment="CENTER">
-              <xAxis>
-                <CategoryAxis side="BOTTOM" />
-              </xAxis>
-              <yAxis>
-                <NumberAxis side="LEFT" />
-              </yAxis>
-            </AreaChart>
-         </bottom>
-         <center>
-            <AreaChart fx:id="eSenseChart" title="eSense" BorderPane.alignment="CENTER">
-              <xAxis>
-                <CategoryAxis side="BOTTOM" />
-              </xAxis>
-              <yAxis>
-                <NumberAxis side="LEFT" />
-              </yAxis>
-            </AreaChart>
-         </center>
          <right>
-            <ImageView fitHeight="150.0" fitWidth="200.0" pickOnBounds="true" preserveRatio="true" BorderPane.alignment="CENTER">
+            <ImageView fx:id="iconImageView" fitHeight="282.0" fitWidth="298.0" pickOnBounds="true" preserveRatio="true" BorderPane.alignment="CENTER">
                <image>
-                  <Image url="@../../../../../../../../../../Pictures/tumblr_pu6klszwW31rf3kz1o1_500.png" />
+                  <Image url="@../../../../../../../../../../Pictures/Kaguya%20Hime/PrincessKaguya.jpg" />
                </image>
             </ImageView>
          </right>
+         <top>
+            <MenuBar styleClass="mainMenuBar" stylesheets="@mindwaveviewerfxml.css" BorderPane.alignment="CENTER">
+              <menus>
+                <Menu mnemonicParsing="false" text="Data">
+                  <items>
+                    <MenuItem mnemonicParsing="false" text="Close" />
+                  </items>
+                </Menu>
+                <Menu mnemonicParsing="false" text="Light Output">
+                  <items>
+                    <MenuItem mnemonicParsing="false" text="Delete" />
+                  </items>
+                </Menu>
+              </menus>
+            </MenuBar>
+         </top>
+         <center>
+            <StackedAreaChart fx:id="eSenseChart" title="eSense" BorderPane.alignment="CENTER">
+              <xAxis>
+                <NumberAxis side="BOTTOM" />
+              </xAxis>
+              <yAxis>
+                <NumberAxis side="LEFT" />
+              </yAxis>
+            </StackedAreaChart>
+         </center>
+         <bottom>
+            <StackedAreaChart fx:id="brainwaveChart" title="Brainwaves" BorderPane.alignment="CENTER">
+              <xAxis>
+                <NumberAxis side="BOTTOM" />
+              </xAxis>
+              <yAxis>
+                <NumberAxis side="LEFT" />
+              </yAxis>
+            </StackedAreaChart>
+         </bottom>
       </BorderPane>
    </children>
 </AnchorPane>

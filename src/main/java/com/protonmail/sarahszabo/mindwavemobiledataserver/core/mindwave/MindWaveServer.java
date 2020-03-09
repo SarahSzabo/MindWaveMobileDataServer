@@ -44,66 +44,71 @@ public enum MindWaveServer {
      * A public queue in which elements are published in addition to the UDP
      * output.
      */
-    public final NoBlockAddBlockingQueue<MindWavePacket> OUTPUT_QUEUE = new NoBlockAddBlockingQueue<>(20);
+    public static final NoBlockAddBlockingQueue<MindWavePacket> OUTPUT_QUEUE = new NoBlockAddBlockingQueue<>(20);
 
     /**
      * Starts the MindWave server and initiates the connection to the ThinkGear
      * Connector. This occurs in another (daemon) thread.
      */
-    public void start() {
+    public static void start() {
         mindwaveServerExecutor.submit(() -> {
-            System.out.println("Connecting to host = " + LOCAL_HOST + ", port = " + THINKGEAR_PORT);
-            try (var mindwaveSocket = new Socket(LOCAL_HOST, THINKGEAR_PORT)) {
-                //Define variables
-                var mindwaveInput = mindwaveSocket.getInputStream();
-                var mindwaveReader = new BufferedReader(new InputStreamReader(mindwaveInput, Charset.forName("UTF-8")));
-                var mindwaveOutput = mindwaveSocket.getOutputStream();
-                //Write to output
-                System.out.println("Requesting Authorization: " + AUTHORIZE_APP_COMMAND);
-                mindwaveOutput.write(TO_JSON_COMMAND.getBytes());
-                mindwaveOutput.flush();
-                //Wait for authorization
-                System.out.println("Waiting for Authorization (5 Seconds)...");
-                Thread.sleep(5000);
-                if (mindwaveReader.ready()) {
-                    System.out.println("Authorization: " + mindwaveReader.readLine());
-                }
-                //Declare Output Stream to Max
-                try (var udpOutputStream = new DatagramSocket(new InetSocketAddress(LOCAL_HOST, MINDWAVE_SERVER_PORT))) {
-                    //Start 60Hz Loop
-                    while (true) {
-                        if (mindwaveReader.ready()) {
-                            String sourceJson = mindwaveReader.readLine();
-                            System.out.println("JSON TEXT RAW: \n\n" + sourceJson);
-                            try {
-                                var packet = new MindWavePacket(sourceJson);
-                                System.out.println(packet);
-                                var text = packet.toByteString().getBytes();
-                                var datagramPacket = new DatagramPacket(text, text.length,
-                                        InetAddress.getByName("localhost"), MINDWAVE_SERVER_PORT);
-                                udpOutputStream.send(datagramPacket);
-                                OUTPUT_QUEUE.add(packet);
-                            } catch (JSONException je) {
-                                System.err.println("JSON Exception Caught, Continuing Loop");
-                            }
-                        }
-                        //.03333333333333 ms = 1/30 s = 30Hz
-                        Thread.sleep(33);
+            while (true) {
+                System.out.println("Connecting to host = " + LOCAL_HOST + ", port = " + THINKGEAR_PORT);
+                try (var mindwaveSocket = new Socket(LOCAL_HOST, THINKGEAR_PORT)) {
+                    //Define variables
+                    var mindwaveInput = mindwaveSocket.getInputStream();
+                    var mindwaveReader = new BufferedReader(new InputStreamReader(mindwaveInput, Charset.forName("UTF-8")));
+                    var mindwaveOutput = mindwaveSocket.getOutputStream();
+                    //Write to output
+                    System.out.println("Requesting Authorization: " + AUTHORIZE_APP_COMMAND);
+                    mindwaveOutput.write(TO_JSON_COMMAND.getBytes());
+                    mindwaveOutput.flush();
+                    //Wait for authorization
+                    System.out.println("Waiting for Authorization (3 Seconds)...");
+                    Thread.sleep(3000);
+                    if (mindwaveReader.ready()) {
+                        System.out.println("Authorization: " + mindwaveReader.readLine());
                     }
+                    //Declare Output Stream to Max
+                    try (var udpOutputStream = new DatagramSocket(new InetSocketAddress(LOCAL_HOST, MINDWAVE_SERVER_PORT))) {
+                        //Start 60Hz Loop
+                        while (true) {
+                            if (mindwaveReader.ready()) {
+                                String sourceJson = mindwaveReader.readLine();
+                                System.out.println("JSON TEXT RAW: \n\n" + sourceJson);
+                                try {
+                                    var packet = new MindWavePacket(sourceJson);
+                                    //System.out.println(packet);
+                                    var text = packet.toByteString().getBytes();
+                                    var datagramPacket = new DatagramPacket(text, text.length,
+                                            InetAddress.getByName("localhost"), MINDWAVE_SERVER_PORT);
+                                    //Only send this packet out if it has eSense values in it
+                                    if (packet.hasESense()) {
+                                        udpOutputStream.send(datagramPacket);
+                                        OUTPUT_QUEUE.add(packet);
+                                    }
+                                } catch (JSONException je) {
+                                    System.err.println("JSON Exception Caught, Continuing Loop");
+                                }
+                            }
+                            //.03333333333333 ms = 1/30 s = 30Hz
+                            Thread.sleep(33);
+                        }
+                    }
+                } catch (InterruptedException | IOException ex) {
+                    //Logger.getLogger(MindWaveServer.class.getName()).log(Level.SEVERE, null, ex);
+                    System.err.println("Exception Caught: " + ex);
                 }
-            } catch (InterruptedException | IOException ex) {
-                //Logger.getLogger(MindWaveServer.class.getName()).log(Level.SEVERE, null, ex);
-                System.err.println("Exception Caught: " + ex);
+                System.out.println("Connection to ThinkGear Connector Dropped \nAttempting Reconnection");
             }
         });
-
     }
 
     /**
      * Shuts down the MindWave server and the connection to the ThinkGear
      * Connector.
      */
-    public void shutdown() {
+    public static void shutdown() {
         mindwaveServerExecutor.shutdown();
     }
 }
