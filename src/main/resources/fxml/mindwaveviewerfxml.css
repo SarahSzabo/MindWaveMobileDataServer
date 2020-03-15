@@ -2,7 +2,7 @@
  * Empty Stylesheet file.
  */
 
-/*
+
 .mainFxmlClass {
 
 }
@@ -18,7 +18,33 @@
 .stacked-area-chart{
     -fx-background-color: #0E100E;
 }
+.default-color0.chart-area-symbol { -fx-background-color: rgba(132,53,230,.4), #9a83e0;}
+.default-color1.chart-area-symbol { -fx-background-color: rgba(0,139,223,.4), #fffacd;}
+.default-color2.chart-area-symbol { -fx-background-color: rgba(223,135,0,.4), #d8bfd855;}
+.default-color3.chart-area-symbol { -fx-background-color: rgba(98,255,125,.4), #9a83e0;}
+.default-color4.chart-area-symbol { -fx-background-color: rgba(0,111,178,.4), #fffacd;}
+.default-color5.chart-area-symbol { -fx-background-color: rgba(111,0,255,.4), #d8bfd855;}
+.default-color5.chart-area-symbol { -fx-background-color: rgba(0,133,255,.4), #fffacd;}
+.default-color6.chart-area-symbol { -fx-background-color: rgba(255,154,0,.4), #d8bfd855;}
 
+.default-color0.chart-series-area-line { -fx-stroke: rgba(132,53,230,.4);}
+.default-color1.chart-series-area-line { -fx-stroke: rgba(0,139,223,.4);}
+.default-color2.chart-series-area-line { -fx-stroke: rgba(223,135,0,.4);}
+.default-color3.chart-series-area-line { -fx-stroke: rgba(98,255,125,.4);}
+.default-color4.chart-series-area-line { -fx-stroke: rgba(0,111,178,.4);}
+.default-color5.chart-series-area-line { -fx-stroke: rgba(0,133,255,.4);}
+.default-color6.chart-series-area-line { -fx-stroke: rgba(227,0,255,.4);}
+.default-color7.chart-series-area-line { -fx-stroke: rgba(255,154,0,.4);}
+
+.default-color0.chart-series-area-fill { -fx-fill: rgba(132,53,230,.4)}
+.default-color1.chart-series-area-fill { -fx-fill: rgba(0,139,223,.4);}
+.default-color2.chart-series-area-fill { -fx-fill: rgba(223,135,0,.4);}
+.default-color3.chart-series-area-fill { -fx-fill: rgba(98,255,125,.4)}
+.default-color4.chart-series-area-fill { -fx-fill: rgba(0,111,178,.4);}
+.default-color5.chart-series-area-fill { -fx-fill: rgba(0,133,255,.4);}
+.default-color6.chart-series-area-fill { -fx-fill: rgba(227,0,255,.4);}
+.default-color7.chart-series-area-fill { -fx-fill: rgba(255,154,0,.4);}
+/*
 .border-pane{
     -fx-background-color: fuchsia;
 }

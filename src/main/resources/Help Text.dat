@@ -1,0 +1,23 @@
+The available arguments are:
+
+1-Arg Command Line Options:
+
+TGC-Emulator | Starts the ThinkGearConnector Emulator server to generate pseudo-random packet values.
+TGC | Uses the ThinkGear Connector to pull live data values from the Mindwave Mobile. The Mindwave headset must be paired and the ThinkGearConnector must be running.
+
+2-Arg Command Line Options:
+
+Viewer TGC-Emulator | Starts the ThinkGearConnector Emulator server to generate pseudo-random packet values and display them on the UI viewer
+Viewer TGC | Uses the ThinkGear Connector to pull live data values from the Mindwave Mobile and display them on the UI viewer
+
+Examples:
+java -jar MWMDS.jar TGC-Emulator              | Starts TGC Emulator
+java -jar MWMDS.jar Viewer TGC-Emulator              | Starts TGC Emulator + Live Viewer
+java -jar MWMDS.jar Viewer TGC              | Starts TGC Adapter (TGC Must be Running and Paired with Mindwave Headset)+ Live Viewer
+
+Misc Notes:
+No matter what mode is selected, the data will be outputted to the localhost IP address on port 45,000 via UDP
+
+Creator:
+Sarah Szabo
+https://github.com/SarahSzabo
