@@ -18,6 +18,8 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.chart.AreaChart;
+import javafx.scene.chart.LineChart;
+import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.StackedAreaChart;
 import javafx.scene.chart.XYChart;
 import javafx.scene.chart.XYChart.Data;
@@ -42,7 +44,11 @@ public class MindwaveViewer extends Application {
      * Starts the UI in it's own controller thread.
      */
     public static void initializeUI() {
-        MindwaveViewer.launch();
+        if (!MindWaveServer.isInitialized()) {
+            throw new IllegalStateException("The Mindwave Server is not running. It must be run first before calling the UI");
+        } else {
+            MindwaveViewer.launch();
+        }
     }
 
     /**
@@ -59,29 +65,29 @@ public class MindwaveViewer extends Application {
      * @param series The series to use
      * @param value The value to add
      */
-    private static <X, Y> void setNew(Series<Integer, Y> series, Data<Integer, Y> value) {
+    private static <X, Y> void setNew(Series<Number, Y> series, Data<Number, Y> value) {
         series.getData().remove(0);
         series.getData().stream().forEach(data -> {
-            data.setXValue(data.getXValue() - 1);
+            data.setXValue(((int) data.getXValue() - 1));
         });
         series.getData().add(value);
     }
 
     @FXML
-    private BorderPane baseGridPane;
+    private BorderPane baseBorderPane;
 
     @FXML
-    private StackedAreaChart<Integer, Double> eSenseChart;
+    private AreaChart<Number, Number> eSenseChart;
 
     @FXML
-    private StackedAreaChart<Integer, Double> brainwaveChart;
+    private AreaChart<Number, Number> brainwaveChart;
 
     @FXML
     private ImageView iconImageView;
 
     @FXML
     void initialize() {
-        assert baseGridPane != null : "fx:id=\"baseGridPane\" was not injected: check your FXML file 'MindWaveViewerFXML.fxml'.";
+        assert baseBorderPane != null : "fx:id=\"baseGridPane\" was not injected: check your FXML file 'MindWaveViewerFXML.fxml'.";
         assert eSenseChart != null : "fx:id=\"eSenseChart\" was not injected: check your FXML file 'MindWaveViewerFXML.fxml'.";
         assert brainwaveChart != null : "fx:id=\"brainwaveChart\" was not injected: check your FXML file 'MindWaveViewerFXML.fxml'.";
     }
@@ -92,18 +98,15 @@ public class MindwaveViewer extends Application {
             stage.setAlwaysOnTop(true);
             stage.setResizable(true);
             stage.setTitle("Mindwave Mobile 2 Data Viewer");
+            stage.setMaximized(true);
             //Load FXML
             var fxmlLoader = new FXMLLoader(getClass().getClassLoader().getResource("fxml/MindWaveViewer.fxml"));
             fxmlLoader.setController(this);
             stage.setScene(new Scene(fxmlLoader.load()));
             stage.getIcons().add(new Image(getClass().getClassLoader().getResourceAsStream("pictures/KaguyaHime.jpg")));
 
-            //Setup Axes & Charts
-            eSenseChart.getXAxis().setLabel("Time");
-            eSenseChart.getYAxis().setLabel("Intensity");
-            brainwaveChart.getXAxis().setLabel("Time");
-            brainwaveChart.getYAxis().setLabel("Intensity");
-
+            //eSenseChart.setAnimated(false);
+            //brainwaveChart.setAnimated(false);
             initDataReader();
             iconImageView.setImage(new Image(getClass().getClassLoader().getResourceAsStream("pictures/KaguyaHime.jpg")));
 
@@ -112,6 +115,18 @@ public class MindwaveViewer extends Application {
             Logger.getLogger(MindwaveViewer.class.getName()).log(Level.SEVERE, null, ex);
             System.err.println("FXML Couldn't Load! " + ex);
         }
+
+        eSenseChart = new AreaChart<>(new NumberAxis(1, 20, 1), new NumberAxis(0, 20, 1));
+        brainwaveChart = new AreaChart<>(new NumberAxis(1, 20, 1), new NumberAxis(0, 20, 1));
+
+        //Set Y-Axes to auto-ranging & Disable Animation
+        eSenseChart.getYAxis().setAutoRanging(true);
+        eSenseChart.setAnimated(false);
+        brainwaveChart.getYAxis().setAutoRanging(true);
+        brainwaveChart.setAnimated(false);
+
+        baseBorderPane.setCenter(eSenseChart);
+        baseBorderPane.setBottom(brainwaveChart);
     }
 
     /**
@@ -119,8 +134,7 @@ public class MindwaveViewer extends Application {
      */
     private void initDataReader() {
         MINDWAVE_VIEWER_EXECUTOR.submit(() -> {
-            //Initialize Server
-            MindWaveServer.start();
+            //Assume Server Initialized Already
             while (true) {
                 /*
                 SERIES FORMAT:
@@ -131,30 +145,30 @@ public class MindwaveViewer extends Application {
                 var packet = MindWaveServer.MINDWAVESERVER.OUTPUT_QUEUE.take();
                 if (!packet.isBlinkOnly()) {
                     Platform.runLater(() -> {//eSense Data Series
-                        var attention = new XYChart.Series<Integer, Double>();
+                        var attention = new XYChart.Series<Number, Number>();
                         attention.setName("Attention");
-                        var meditation = new XYChart.Series<Integer, Double>();
+                        var meditation = new XYChart.Series<Number, Number>();
                         meditation.setName("Meditation");
-                        var mentalEffort = new XYChart.Series<Integer, Double>();
+                        var mentalEffort = new XYChart.Series<Number, Number>();
                         mentalEffort.setName("Mental Effort");
-                        var familiarity = new XYChart.Series<Integer, Double>();
+                        var familiarity = new XYChart.Series<Number, Number>();
                         familiarity.setName("Familiarity");
                         //Brainwave Data Series
-                        var delta = new XYChart.Series<Integer, Double>();
+                        var delta = new XYChart.Series<Number, Number>();
                         delta.setName("Delta");
-                        var theta = new XYChart.Series<Integer, Double>();
+                        var theta = new XYChart.Series<Number, Number>();
                         theta.setName("Theta");
-                        var lowAlpha = new XYChart.Series<Integer, Double>();
+                        var lowAlpha = new XYChart.Series<Number, Number>();
                         lowAlpha.setName("Low Alpha");
-                        var highAlpha = new XYChart.Series<Integer, Double>();
+                        var highAlpha = new XYChart.Series<Number, Number>();
                         highAlpha.setName("High Alpha");
-                        var lowBeta = new XYChart.Series<Integer, Double>();
+                        var lowBeta = new XYChart.Series<Number, Number>();
                         lowBeta.setName("Low Beta");
-                        var highBeta = new XYChart.Series<Integer, Double>();
+                        var highBeta = new XYChart.Series<Number, Number>();
                         highBeta.setName("High Beta");
-                        var lowGamma = new XYChart.Series<Integer, Double>();
+                        var lowGamma = new XYChart.Series<Number, Number>();
                         lowGamma.setName("Low Gamma");
-                        var highGamma = new XYChart.Series<Integer, Double>();
+                        var highGamma = new XYChart.Series<Number, Number>();
                         highGamma.setName("High Gamma");
 
                         var eSenseData = eSenseChart.getData();
@@ -163,8 +177,8 @@ public class MindwaveViewer extends Application {
                         if (eSenseData.isEmpty()) {
                             eSenseData.add(attention);
                             eSenseData.add(meditation);
-                            //data.add(mentalEffort);
-                            //data.add(familiarity);
+                            //eSenseData.add(mentalEffort);
+                            //eSenseData.add(familiarity);
 
                             brainwaveData.add(delta);
                             brainwaveData.add(theta);
@@ -181,10 +195,11 @@ public class MindwaveViewer extends Application {
                         //just add at end, else take top (entries - 1) and and new to end
                         //They're all always the same size, so just grab eSense
                         if (eSenseData.get(0).getData().size() < acceptableEntries) {
+                            var x = packet.getAttention();
                             eSenseData.get(0).getData().add(new Data<>(eSenseData.get(0).getData().size(), packet.getAttention()));
                             eSenseData.get(1).getData().add(new Data<>(eSenseData.get(1).getData().size(), packet.getMeditation()));
-                            //eSenseData.get(2).getData().add(new Data<>((double) eSenseData.get(2).getData().size(), packet.getMentalEffort()));
-                            //eSenseData.get(3).getData().add(new Data<>((double) eSenseData.get(3).getData().size(), packet.getFamiliarity()));
+                            //eSenseData.get(2).getData().add(new Data<>(eSenseData.get(2).getData().size(), packet.getMentalEffort()));
+                            //eSenseData.get(3).getData().add(new Data<>(eSenseData.get(3).getData().size(), packet.getFamiliarity()));
 
                             //Now Brainwaves
                             brainwaveData.get(0).getData().add(new Data<>(brainwaveData.get(0).getData().size(), packet.getDelta()));
@@ -198,8 +213,8 @@ public class MindwaveViewer extends Application {
                         } else {
                             setNew(eSenseData.get(0), new Data<>(20, packet.getAttention()));
                             setNew(eSenseData.get(1), new Data<>(20, packet.getMeditation()));
-                            //setNew(eSenseData.get(2), new Data<>((double) eSenseData.get(2).getData().size(), packet.getMentalEffort()));
-                            //setNew(eSenseData.get(3), new Data<>((double) eSenseData.get(3).getData().size(), packet.getFamiliarity()));
+                            //setNew(eSenseData.get(2), new Data<>(eSenseData.get(2).getData().size(), packet.getMentalEffort()));
+                            //setNew(eSenseData.get(3), new Data<>(eSenseData.get(3).getData().size(), packet.getFamiliarity()));
 
                             //Brainwaves
                             setNew(brainwaveData.get(0), new Data<>(20, packet.getDelta()));

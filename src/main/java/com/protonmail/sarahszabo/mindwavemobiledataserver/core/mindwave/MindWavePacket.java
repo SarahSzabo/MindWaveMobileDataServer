@@ -19,7 +19,7 @@ public class MindWavePacket {
 
     private static final Logger LOG = Logger.getLogger(MindWavePacket.class.getName());
 
-    private final double attention, meditation, mentalEffort, familiarity, delta, theta,
+    private final int attention, meditation, mentalEffort, familiarity, delta, theta,
             lowAlpha, highAlpha, lowBeta, highBeta, lowGamma, highGamma, blinkStrength, poorSignalLevel;
     private final LocalTime creationTime;
 
@@ -29,7 +29,63 @@ public class MindWavePacket {
     /**
      * The default value for all fields of the "double" type.
      */
-    public final double MINDWAVE_DEFAULT_NULL_VALUE = 0;
+    public final int MINDWAVE_DEFAULT_NULL_VALUE = 0;
+
+    /**
+     * The constructor that allows the caller to fully construct the packet.
+     *
+     * @param attention This eSense attribute
+     * @param meditation This eSense attribute
+     * @param mentalEffort This eSense attribute
+     * @param familiarity This eSense attribute
+     * @param delta This brainwave
+     * @param theta This brainwave
+     * @param lowAlpha This brainwave
+     * @param highAlpha This brainwave
+     * @param lowBeta This brainwave
+     * @param highBeta This brainwave
+     * @param lowGamma This brainwave
+     * @param highGamma This brainwave
+     * @param blinkStrength The strength of the blink
+     * @param poorSignalLevel The signal level quality
+     */
+    public MindWavePacket(int attention, int meditation, int mentalEffort, int familiarity,
+            int delta, int theta, int lowAlpha, int highAlpha, int lowBeta, int highBeta,
+            int lowGamma, int highGamma, int blinkStrength, int poorSignalLevel) {
+        this.attention = attention;
+        this.meditation = meditation;
+        this.mentalEffort = mentalEffort;
+        this.familiarity = familiarity;
+        this.delta = delta;
+        this.theta = theta;
+        this.lowAlpha = lowAlpha;
+        this.highAlpha = highAlpha;
+        this.lowBeta = lowBeta;
+        this.highBeta = highBeta;
+        this.lowGamma = lowGamma;
+        this.highGamma = highGamma;
+        this.blinkStrength = blinkStrength;
+        this.poorSignalLevel = poorSignalLevel;
+
+        this.creationTime = LocalTime.now();
+        /*
+        We consider this a "Blink Only" packet if basically everything is 0, set values according to TGC Spec
+        Values are 0-200
+        0: Good
+        200: Disconnected
+         */
+        this.isBlinkOnly = (this.highAlpha == 0) && (this.attention == 0) && (this.meditation == 0);
+        this.hasESense = (this.attention != 0) && (this.meditation != 0);
+        if (this.poorSignalLevel == 0) {
+            this.isPoorConnectionQuality = ThinkGearServerConnectionQuality.OPTIMAL;
+        } else if (this.poorSignalLevel > 0 && this.poorSignalLevel <= 50) {
+            this.isPoorConnectionQuality = ThinkGearServerConnectionQuality.SUB_OPTIMAL;
+        } else if (this.poorSignalLevel > 50 && this.poorSignalLevel < 200) {
+            this.isPoorConnectionQuality = ThinkGearServerConnectionQuality.POOR;
+        } else {
+            this.isPoorConnectionQuality = ThinkGearServerConnectionQuality.DISCONNECTED;
+        }
+    }
 
     /**
      * The constructor that accepts raw JSON text from the ThinkGear Connector.
@@ -47,22 +103,22 @@ public class MindWavePacket {
         JSONObject packet = new JSONObject(originText);
         if (packet.has("eSense")) {
             JSONObject eSense = packet.getJSONObject("eSense");
-            this.attention = eSense.getDouble("attention");
-            this.meditation = eSense.getDouble("meditation");
+            this.attention = eSense.getInt("attention");
+            this.meditation = eSense.getInt("meditation");
         } else {
             this.attention = MINDWAVE_DEFAULT_NULL_VALUE;
             this.meditation = MINDWAVE_DEFAULT_NULL_VALUE;
         }
         if (packet.has("eegPower")) {
             JSONObject eegPower = packet.getJSONObject("eegPower");
-            this.delta = eegPower.getDouble("delta");
-            this.theta = eegPower.getDouble("theta");
-            this.lowAlpha = eegPower.getDouble("lowAlpha");
-            this.highAlpha = eegPower.getDouble("highAlpha");
-            this.lowBeta = eegPower.getDouble("lowBeta");
-            this.highBeta = eegPower.getDouble("highBeta");
-            this.lowGamma = eegPower.getDouble("lowGamma");
-            this.highGamma = eegPower.getDouble("highGamma");
+            this.delta = eegPower.getInt("delta");
+            this.theta = eegPower.getInt("theta");
+            this.lowAlpha = eegPower.getInt("lowAlpha");
+            this.highAlpha = eegPower.getInt("highAlpha");
+            this.lowBeta = eegPower.getInt("lowBeta");
+            this.highBeta = eegPower.getInt("highBeta");
+            this.lowGamma = eegPower.getInt("lowGamma");
+            this.highGamma = eegPower.getInt("highGamma");
         } else {
             this.delta = MINDWAVE_DEFAULT_NULL_VALUE;
             this.theta = MINDWAVE_DEFAULT_NULL_VALUE;
@@ -114,6 +170,17 @@ public class MindWavePacket {
     }
 
     /**
+     * Gets the {@link MindWaveEasyGraphPacket} version of this packet.
+     *
+     * @return The version of this packet that is easily graph-able
+     */
+    public MindWavePacket toEasyGraphPacket() {
+        return new MindWaveEasyGraphPacket(this.attention, this.meditation, this.mentalEffort, this.familiarity,
+                this.delta, this.theta, this.lowAlpha, this.highAlpha, this.lowBeta, this.highBeta,
+                this.lowGamma, this.highGamma, this.blinkStrength, this.poorSignalLevel);
+    }
+
+    /**
      * Returns this {@link MindWavePacket} in the form of:
      * ATTENTION|MEDITATION|DELTA|THETA|LOWALPHA|HIGHALPHA|LOWBETA|HIGHBETA|LOWGAMMA|HIGHGAMMA|
      * POORSIGNALLEVEL|BLINKSTRENGTH for transmission to MAXMSP in the form of a
@@ -141,7 +208,7 @@ public class MindWavePacket {
      *
      * @return This field
      */
-    public double getAttention() {
+    public int getAttention() {
         return this.attention;
     }
 
@@ -150,7 +217,7 @@ public class MindWavePacket {
      *
      * @return This field
      */
-    public double getMeditation() {
+    public int getMeditation() {
         return this.meditation;
     }
 
@@ -159,7 +226,7 @@ public class MindWavePacket {
      *
      * @return This field
      */
-    public double getMentalEffort() {
+    public int getMentalEffort() {
         return this.mentalEffort;
     }
 
@@ -168,7 +235,7 @@ public class MindWavePacket {
      *
      * @return This field
      */
-    public double getFamiliarity() {
+    public int getFamiliarity() {
         return this.familiarity;
     }
 
@@ -177,7 +244,7 @@ public class MindWavePacket {
      *
      * @return This field
      */
-    public double getDelta() {
+    public int getDelta() {
         return this.delta;
     }
 
@@ -186,7 +253,7 @@ public class MindWavePacket {
      *
      * @return This field
      */
-    public double getTheta() {
+    public int getTheta() {
         return this.theta;
     }
 
@@ -195,7 +262,7 @@ public class MindWavePacket {
      *
      * @return This field
      */
-    public double getLowAlpha() {
+    public int getLowAlpha() {
         return this.lowAlpha;
     }
 
@@ -204,7 +271,7 @@ public class MindWavePacket {
      *
      * @return This field
      */
-    public double getHighAlpha() {
+    public int getHighAlpha() {
         return this.highAlpha;
     }
 
@@ -213,7 +280,7 @@ public class MindWavePacket {
      *
      * @return This field
      */
-    public double getLowBeta() {
+    public int getLowBeta() {
         return this.lowBeta;
     }
 
@@ -222,7 +289,7 @@ public class MindWavePacket {
      *
      * @return This field
      */
-    public double getHighBeta() {
+    public int getHighBeta() {
         return this.highBeta;
     }
 
@@ -231,7 +298,7 @@ public class MindWavePacket {
      *
      * @return This field
      */
-    public double getLowGamma() {
+    public int getLowGamma() {
         return this.lowGamma;
     }
 
@@ -240,7 +307,7 @@ public class MindWavePacket {
      *
      * @return This field
      */
-    public double getHighGamma() {
+    public int getHighGamma() {
         return this.highGamma;
     }
 
@@ -249,7 +316,7 @@ public class MindWavePacket {
      *
      * @return This field
      */
-    public double getBlinkStrength() {
+    public int getBlinkStrength() {
         return this.blinkStrength;
     }
 
@@ -258,7 +325,7 @@ public class MindWavePacket {
      *
      * @return This field
      */
-    public double getPoorSignalLevel() {
+    public int getPoorSignalLevel() {
         return this.poorSignalLevel;
     }
 
