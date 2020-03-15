@@ -41,7 +41,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>com.protonmail.sarahszabo.wanderingecho.Init</mainClass>
+                            <mainClass>com.protonmail.sarahszabo.mindwavemobiledataserver.core.Init</mainClass>
                         </manifest>
                     </archive>
                 </configuration>

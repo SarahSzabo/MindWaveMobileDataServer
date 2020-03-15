@@ -4,11 +4,13 @@ import com.protonmail.sarahszabo.mindwavemobiledataserver.core.mindwave.MindWave
 import com.protonmail.sarahszabo.mindwavemobiledataserver.core.ui.mindwaveviewer.MindwaveViewer;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import org.apache.commons.io.IOUtils;
 
 /**
  * The initialization class for the Neurosky Mindwave Mobile.
@@ -20,7 +22,7 @@ public class Init {
     /**
      * The name of the program.
      */
-    public static final String PROGRAM_NAME = "Mindwave Mobile DS";
+    public static final String PROGRAM_NAME = "Mindwave Mobile Data Server (DS)";
     /**
      * The version number of the program.
      */
@@ -76,10 +78,9 @@ public class Init {
     }
 
     private static void printHelpDocAndExit() throws URISyntaxException, IOException {
-        var lineStream = Files.lines(Paths.get(Init.class.getResource("/Help Text.dat").toURI()));
-        var pre = FULL_PROGRAM_NAME + " Help Documentation:\n\n";
-        var summation = lineStream.collect(Collectors.joining());
-        messageThenExit(summation);
+        var helpDoc = IOUtils.toString(Init.class.getResourceAsStream("/Help Text.dat"), Charset.defaultCharset());
+        var prefix = FULL_PROGRAM_NAME + " Help Documentation:\n\n";
+        messageThenExit(prefix + "\n\n" + helpDoc);
     }
 
     public static void messageThenExit(String message) {
