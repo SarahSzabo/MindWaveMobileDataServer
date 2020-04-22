@@ -16,7 +16,13 @@ java -jar MWMDS.jar Viewer TGC-Emulator              | Starts TGC Emulator + Liv
 java -jar MWMDS.jar Viewer TGC              | Starts TGC Adapter (TGC Must be Running and Paired with Mindwave Headset)+ Live Viewer
 
 Misc Notes:
-No matter what mode is selected, the data will be outputted to the localhost IP address on port 45,000 via UDP
+No matter what mode is selected, the data will be outputted to the localhost IP address on port 45,000 via UDP.
+
+UDP Packet Format:
+ATTENTION MEDITATION DELTA THETA LOWALPHA HIGHALPHA LOWBETA HIGHBETA LOWGAMMA HIGHGAMMA POORSIGNALLEVEL BLINKSTRENGTH for transmission to MAXMSP (or other programs) in the form of a UDP packet.
+
+Note that the UDP packet variables have a space character between them. To use each one, you must break apart this message on the space character.
+This can be accomplished by regular expressions.
 
 Creator:
 Sarah Szabo

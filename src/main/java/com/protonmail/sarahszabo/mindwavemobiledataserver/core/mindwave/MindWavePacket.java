@@ -181,17 +181,17 @@ public class MindWavePacket {
     }
 
     /**
-     * Returns this {@link MindWavePacket} in the form of:
-     * ATTENTION|MEDITATION|DELTA|THETA|LOWALPHA|HIGHALPHA|LOWBETA|HIGHBETA|LOWGAMMA|HIGHGAMMA|
-     * POORSIGNALLEVEL|BLINKSTRENGTH for transmission to MAXMSP in the form of a
+     * Returns this {@link MindWavePacket} in the form of: ATTENTION MEDITATION
+     * DELTA THETA LOWALPHA HIGHALPHA LOWBETA HIGHBETA LOWGAMMA HIGHGAMMA
+     * POORSIGNALLEVEL BLINKSTRENGTH for transmission to MAXMSP in the form of a
      * UDP packet.
      *
      * @return
      */
     public String toByteString() {
-        return this.attention + "|" + this.meditation + "|" + this.mentalEffort + "|" + this.familiarity + "|" + this.delta + "|" + this.theta + "|"
-                + this.lowAlpha + "|" + this.highAlpha + "|" + this.lowBeta + "|" + this.highBeta + "|" + this.lowGamma
-                + "|" + this.highGamma + "|" + this.poorSignalLevel + "|" + this.blinkStrength;
+        return this.attention + " " + this.meditation + " " + this.mentalEffort + " " + this.familiarity + " " + this.delta + " "
+                + this.theta + " " + this.lowAlpha + " " + this.highAlpha + " " + this.lowBeta + " " + this.highBeta + " " + this.lowGamma
+                + " " + this.highGamma + " " + this.poorSignalLevel + " " + this.blinkStrength;
     }
 
     @Override
