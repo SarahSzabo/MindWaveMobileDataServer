@@ -5,6 +5,11 @@
  */
 package com.protonmail.sarahszabo.mindwavemobiledataserver.core.mindwave;
 
+import com.illposed.osc.OSCBundle;
+import com.illposed.osc.OSCMessage;
+import com.illposed.osc.OSCPacket;
+import com.illposed.osc.OSCSerializeException;
+import com.illposed.osc.transport.udp.OSCPortOut;
 import com.protonmail.sarahszabo.mindwavemobiledataserver.core.Init;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -17,6 +22,7 @@ import java.net.ServerSocket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.nio.charset.Charset;
+import java.util.Arrays;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -34,7 +40,7 @@ public enum MindWaveServer {
     MINDWAVESERVER();
 
     private static final String LOCAL_HOST = "127.0.0.1";
-    private static final int THINKGEAR_PORT = 13854, MINDWAVE_SERVER_PORT = 45_000;
+    private static final int THINKGEAR_PORT = 13854, MINDWAVE_SERVER_PORT = 45_000, MINDWAVE_SERVER_PORT_DESTINATION = MINDWAVE_SERVER_PORT + 1;
     private static final String TO_JSON_COMMAND = "{\"enableRawOutput\": false, \"format\": \"Json\"}\n";
     private static final String AUTHORIZE_APP_COMMAND = "{\"appName\": \"Mindwave Mobile 2 Data Server\", \"appKey\":"
             + "\"55cf229b95b3fafa976b385af1b5670a817208d2\"}";
@@ -86,7 +92,7 @@ public enum MindWaveServer {
                                 rand.nextInt(brainwaveMax), rand.nextInt(brainwaveMax), rand.nextInt(brainwaveMax),
                                 rand.nextInt(brainwaveMax), rand.nextInt(brainwaveMax), rand.nextInt(101), 0);
                         System.out.println("Emulated Packet Created:\n\n" + randomPacket);
-                        outputMindWavePacket(randomPacket, udpOutputStream);
+                        outputMindWavePacket(randomPacket);
                         Thread.sleep(1000);
                     } catch (InterruptedException | IOException ex) {
                         Logger.getLogger(MindWaveServer.class.getName()).log(Level.SEVERE, null, ex);
@@ -135,7 +141,7 @@ public enum MindWaveServer {
                                 String sourceJson = mindwaveReader.readLine();
                                 System.out.println("JSON TEXT RAW: \n\n" + sourceJson);
                                 try {
-                                    outputMindWavePacket(new MindWavePacket(sourceJson), udpOutputStream);
+                                    outputMindWavePacket(new MindWavePacket(sourceJson));
                                 } catch (JSONException je) {
                                     System.err.println("JSON Exception Caught, Continuing Loop");
                                 }
@@ -173,15 +179,49 @@ public enum MindWaveServer {
      * @throws UnknownHostException
      * @throws IOException
      */
-    private static void outputMindWavePacket(MindWavePacket packet, DatagramSocket udpOutputStream) throws UnknownHostException, IOException {
-        //System.out.println(packet);
-        var text = packet.toByteString().getBytes();
-        var datagramPacket = new DatagramPacket(text, text.length,
-                InetAddress.getByName("localhost"), MINDWAVE_SERVER_PORT);
+    private static void outputMindWavePacket(MindWavePacket packet) throws UnknownHostException, IOException {
+        var oscOut = new OSCPortOut(InetAddress.getLocalHost(), MINDWAVE_SERVER_PORT_DESTINATION);
+        var bundle = toOSCBundle(packet);
         //Only send this packet out if it has eSense values in it
         if (packet.hasESense()) {
-            udpOutputStream.send(datagramPacket);
+            //Send out packets
+            for (OSCPacket oscPacket : bundle.getPackets()) {
+                try {
+                    oscOut.send(oscPacket);
+                } catch (OSCSerializeException ex) {
+                    Logger.getLogger(MindWaveServer.class.getName()).log(Level.SEVERE, null, ex);
+                    throw new IllegalStateException("Something messed up when sending an OSC Packet", ex);
+                }
+            }
+            //Add to internal queue so that other classes (Viewer) can display data
             OUTPUT_QUEUE.add(packet);
         }
+    }
+
+    /**
+     * Gets the OSC formatted version of a {@link MindWavePacket}.
+     *
+     * @param packet The packet to use as a data source
+     * @return The OSCBundle of this packet
+     */
+    private static OSCBundle toOSCBundle(MindWavePacket packet) {
+        return new OSCBundle(Arrays.asList(
+                toMessage("/Attention", packet.getAttention()),
+                toMessage("/Meditation", packet.getMeditation()),
+                toMessage("/Delta", packet.getDelta()),
+                toMessage("/Theta", packet.getTheta()),
+                toMessage("/LowAlpha", packet.getLowAlpha()),
+                toMessage("/HighAlpha", packet.getHighAlpha()),
+                toMessage("/LowBeta", packet.getLowBeta()),
+                toMessage("/HighBeta", packet.getHighBeta()),
+                toMessage("/LowGamma", packet.getLowGamma()),
+                toMessage("/HighGamma", packet.getHighGamma()),
+                toMessage("/PoorSignalLevel", packet.getPoorSignalLevel()),
+                toMessage("/BlinkStrength", packet.getBlinkStrength())
+        ));
+    }
+
+    private static <T> OSCMessage toMessage(String text, T arg) {
+        return new OSCMessage(text, Arrays.asList(arg));
     }
 }

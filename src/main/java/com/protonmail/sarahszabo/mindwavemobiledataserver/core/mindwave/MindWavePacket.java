@@ -184,7 +184,7 @@ public class MindWavePacket {
      * Returns this {@link MindWavePacket} in the form of: ATTENTION MEDITATION
      * DELTA THETA LOWALPHA HIGHALPHA LOWBETA HIGHBETA LOWGAMMA HIGHGAMMA
      * POORSIGNALLEVEL BLINKSTRENGTH for transmission to MAXMSP in the form of a
-     * UDP packet.
+     * OSC UDP packet.
      *
      * @return
      */
