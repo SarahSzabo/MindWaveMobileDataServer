@@ -45,6 +45,7 @@ public enum MindWaveServer {
     private static final String AUTHORIZE_APP_COMMAND = "{\"appName\": \"Mindwave Mobile 2 Data Server\", \"appKey\":"
             + "\"55cf229b95b3fafa976b385af1b5670a817208d2\"}";
     private static final ServerSocket SERVER_SOCKET;
+    private static final int BRAINWAVE_MAX_VALUE = 4_000_000;
 
     private static boolean initialied = false;
 
@@ -73,38 +74,71 @@ public enum MindWaveServer {
         }
     }
 
+    private static MindWavePacket generateRandomPacket() {
+        var rand = new Random();
+        return new MindWavePacket(rand.nextInt(101), rand.nextInt(101), rand.nextInt(101),
+                rand.nextInt(101), rand.nextInt(BRAINWAVE_MAX_VALUE), rand.nextInt(BRAINWAVE_MAX_VALUE), rand.nextInt(BRAINWAVE_MAX_VALUE),
+                rand.nextInt(BRAINWAVE_MAX_VALUE), rand.nextInt(BRAINWAVE_MAX_VALUE), rand.nextInt(BRAINWAVE_MAX_VALUE),
+                rand.nextInt(BRAINWAVE_MAX_VALUE), rand.nextInt(BRAINWAVE_MAX_VALUE), rand.nextInt(101), 0);
+    }
+
     /**
      * Starts the packet creator thread. Makes random packets for testing
      * purposes.
      */
     public static void startEmulatorThread() {
+        startEmulatorThread("");
+    }
+
+    /**
+     * Starts the packet creator thread. Makes random packets for testing
+     * purposes.
+     */
+    public static void startEmulatorThread(String type) {
         checkInitialization();
         initialied = true;
-        var thread = new Thread(() -> {
-            System.out.println("Starting TGC Emulator Thread");
-            try (var udpOutputStream = new DatagramSocket(new InetSocketAddress(LOCAL_HOST, MINDWAVE_SERVER_PORT))) {
+        Runnable emulatorType;
+        //Use the Hold-Value emulator type
+        if (type.equalsIgnoreCase("TGC-Emulator-Squarewave")) {
+            emulatorType = () -> {
+                while (true) {
+                    var mindwavePacket = generateRandomPacket();
+                    System.out.println("Squarewave TGC-Emulator Thread Initial Packet:" + mindwavePacket);
+                    final int MAX = 7;
+                    for (int i = 0; i < MAX; i++) {
+                        System.out.println("Squarewave TGC-Emulator Thread Index:" + i + "/" + MAX);
+                        outputMindWavePacket(mindwavePacket);
+                        try {
+                            Thread.sleep(1000);
+                        } catch (InterruptedException ex) {
+                            Logger.getLogger(MindWaveServer.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    }
+
+                }
+            };
+        } //Use the random emulator type
+        else {
+            emulatorType = () -> {
+                System.out.println("Starting TGC Emulator Thread");
                 while (true) {
                     try {
-                        var rand = new Random();
-                        var brainwaveMax = 4_000_000;
-                        var randomPacket = new MindWavePacket(rand.nextInt(101), rand.nextInt(101), rand.nextInt(101),
-                                rand.nextInt(101), rand.nextInt(brainwaveMax), rand.nextInt(brainwaveMax), rand.nextInt(brainwaveMax),
-                                rand.nextInt(brainwaveMax), rand.nextInt(brainwaveMax), rand.nextInt(brainwaveMax),
-                                rand.nextInt(brainwaveMax), rand.nextInt(brainwaveMax), rand.nextInt(101), 0);
+                        var randomPacket = generateRandomPacket();
                         System.out.println("Emulated Packet Created:\n\n" + randomPacket);
                         outputMindWavePacket(randomPacket);
                         Thread.sleep(1000);
-                    } catch (InterruptedException | IOException ex) {
+                    } catch (InterruptedException ex) {
                         Logger.getLogger(MindWaveServer.class.getName()).log(Level.SEVERE, null, ex);
                         throw new IllegalStateException("The Mindwave Server test data creator thread was interrupted", ex);
                     }
+
                 }
-            } catch (SocketException ex) {
-                Logger.getLogger(MindWaveServer.class.getName()).log(Level.SEVERE, null, ex);
-                throw new IllegalStateException("Test Data Exception Encountered", ex);
-            }
-        }, Init.PROGRAM_NAME + " ThingGearConnector (TGC) Emulator Thread");
-        thread.setDaemon(true);
+            };
+        }
+        var thread = new Thread(emulatorType, Init.PROGRAM_NAME + " ThingGearConnector (TGC) Emulator Thread");
+
+        thread.setDaemon(
+                true);
         thread.start();
     }
 
@@ -179,22 +213,23 @@ public enum MindWaveServer {
      * @throws UnknownHostException
      * @throws IOException
      */
-    private static void outputMindWavePacket(MindWavePacket packet) throws UnknownHostException, IOException {
-        var oscOut = new OSCPortOut(InetAddress.getLocalHost(), MINDWAVE_SERVER_PORT_DESTINATION);
-        var bundle = toOSCBundle(packet);
-        //Only send this packet out if it has eSense values in it
-        if (packet.hasESense()) {
-            //Send out packets
-            for (OSCPacket oscPacket : bundle.getPackets()) {
-                try {
+    private static void outputMindWavePacket(MindWavePacket packet) {
+        try {
+            var oscOut = new OSCPortOut(InetAddress.getLocalHost(), MINDWAVE_SERVER_PORT_DESTINATION);
+            var bundle = toOSCBundle(packet);
+            //Only send this packet out if it has eSense values in it
+            if (packet.hasESense()) {
+                //Send out packets
+                for (OSCPacket oscPacket : bundle.getPackets()) {
                     oscOut.send(oscPacket);
-                } catch (OSCSerializeException ex) {
-                    Logger.getLogger(MindWaveServer.class.getName()).log(Level.SEVERE, null, ex);
-                    throw new IllegalStateException("Something messed up when sending an OSC Packet", ex);
                 }
+                //Add to internal queue so that other classes (Viewer) can display data
+                OUTPUT_QUEUE.add(packet);
             }
-            //Add to internal queue so that other classes (Viewer) can display data
-            OUTPUT_QUEUE.add(packet);
+        } catch (OSCSerializeException | IOException ex) {
+            Logger.getLogger(MindWaveServer.class
+                    .getName()).log(Level.SEVERE, null, ex);
+            throw new IllegalStateException("Something messed up when sending an OSC Packet", ex);
         }
     }
 

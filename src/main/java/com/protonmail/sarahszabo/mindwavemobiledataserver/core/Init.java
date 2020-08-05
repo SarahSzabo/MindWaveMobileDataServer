@@ -63,6 +63,9 @@ public class Init {
                 if (args[1].equalsIgnoreCase("TGC-Emulator")) {
                     MindWaveServer.startEmulatorThread();
                     //Use Live TGC data
+                } else if (args[1].equalsIgnoreCase("TGC-Emulator-Squarewave")) {
+                    MindWaveServer.startEmulatorThread("TGC-Emulator-Squarewave");
+                    //Use Live TGC data
                 } else if (args[1].equalsIgnoreCase("TGC")) {
                     MindWaveServer.start();
                 } else {

@@ -13,6 +13,7 @@ Viewer TGC | Uses the ThinkGear Connector to pull live data values from the Mind
 Examples:
 java -jar MWMDS.jar TGC-Emulator              | Starts TGC Emulator
 java -jar MWMDS.jar Viewer TGC-Emulator              | Starts TGC Emulator + Live Viewer
+java -jar MWMDS.jar Viewer TGC-Emulator-Squarewave              | Starts TGC Emulator in Squarewave Mode + Live Viewer  (NOTE: Squarewave mode generates a random packet and holds this value for a set period of time, then generates another random packet)
 java -jar MWMDS.jar Viewer TGC              | Starts TGC Adapter (TGC Must be Running and Paired with Mindwave Headset)+ Live Viewer
 
 Misc Notes:
