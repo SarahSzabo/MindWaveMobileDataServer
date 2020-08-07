@@ -40,7 +40,8 @@ public enum MindWaveServer {
     MINDWAVESERVER();
 
     private static final String LOCAL_HOST = "127.0.0.1";
-    private static final int THINKGEAR_PORT = 13854, MINDWAVE_SERVER_PORT = 45_000, MINDWAVE_SERVER_PORT_DESTINATION = MINDWAVE_SERVER_PORT + 1;
+    private static final int THINKGEAR_PORT = 13854, MINDWAVE_SERVER_PORT = 45_000, MINDWAVE_SERVER_OSC_BROADCAST = MINDWAVE_SERVER_PORT + 1,
+            MINDWAVE_SERVER_RAW_BROADCAST = MINDWAVE_SERVER_OSC_BROADCAST + 1;
     private static final String TO_JSON_COMMAND = "{\"enableRawOutput\": false, \"format\": \"Json\"}\n";
     private static final String AUTHORIZE_APP_COMMAND = "{\"appName\": \"Mindwave Mobile 2 Data Server\", \"appKey\":"
             + "\"55cf229b95b3fafa976b385af1b5670a817208d2\"}";
@@ -167,22 +168,19 @@ public enum MindWaveServer {
                     if (mindwaveReader.ready()) {
                         System.out.println("Authorization: " + mindwaveReader.readLine());
                     }
-                    //Declare Output Stream to Max
-                    try (var udpOutputStream = new DatagramSocket(new InetSocketAddress(LOCAL_HOST, MINDWAVE_SERVER_PORT))) {
-                        //Start 60Hz Loop
-                        while (true) {
-                            if (mindwaveReader.ready()) {
-                                String sourceJson = mindwaveReader.readLine();
-                                System.out.println("JSON TEXT RAW: \n\n" + sourceJson);
-                                try {
-                                    outputMindWavePacket(new MindWavePacket(sourceJson));
-                                } catch (JSONException je) {
-                                    System.err.println("JSON Exception Caught, Continuing Loop");
-                                }
+                    //Start 60Hz Loop
+                    while (true) {
+                        if (mindwaveReader.ready()) {
+                            String sourceJson = mindwaveReader.readLine();
+                            System.out.println("JSON TEXT RAW: \n\n" + sourceJson);
+                            try {
+                                outputMindWavePacket(new MindWavePacket(sourceJson));
+                            } catch (JSONException je) {
+                                System.err.println("JSON Exception Caught, Continuing Loop");
                             }
-                            //.03333333333333 ms = 1/30 s = 30Hz
-                            Thread.sleep(33);
                         }
+                        //.03333333333333 ms = 1/30 s = 30Hz
+                        Thread.sleep(33);
                     }
                 } catch (InterruptedException | IOException ex) {
                     //Logger.getLogger(MindWaveServer.class.getName()).log(Level.SEVERE, null, ex);
@@ -215,14 +213,24 @@ public enum MindWaveServer {
      */
     private static void outputMindWavePacket(MindWavePacket packet) {
         try {
-            var oscOut = new OSCPortOut(InetAddress.getLocalHost(), MINDWAVE_SERVER_PORT_DESTINATION);
+            //Broadcast OSC & RAW UDP Integers
+            var oscOut = new OSCPortOut(InetAddress.getLocalHost(), MINDWAVE_SERVER_OSC_BROADCAST);
             var bundle = toOSCBundle(packet);
             //Only send this packet out if it has eSense values in it
             if (packet.hasESense()) {
-                //Send out packets
+                //Send out OSC Bundle
                 for (OSCPacket oscPacket : bundle.getPackets()) {
                     oscOut.send(oscPacket);
                 }
+                //Broadcast RAW Integers over UDP
+                var socket = new DatagramSocket();
+                var bytes = packet.toByteString().getBytes();
+                socket.send(new DatagramPacket(bytes, bytes.length, new InetSocketAddress(MINDWAVE_SERVER_RAW_BROADCAST)));
+
+                //Close Sockets
+                socket.close();
+                oscOut.close();
+
                 //Add to internal queue so that other classes (Viewer) can display data
                 OUTPUT_QUEUE.add(packet);
             }
