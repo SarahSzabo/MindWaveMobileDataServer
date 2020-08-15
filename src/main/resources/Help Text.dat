@@ -25,6 +25,11 @@ ATTENTION MEDITATION DELTA THETA LOWALPHA HIGHALPHA LOWBETA HIGHBETA LOWGAMMA HI
 Note that the UDP packet variables have a space character between them. To use each one, you must break apart this message on the space character.
 This can be accomplished by regular expressions.
 
+PORTS:
+45,000 Mindwave Server Port
+45,001 Mindwave Mobile DS (This program)'s OSC Broadcast Port
+45,002 Mindwave Mobile DS (This program)'s RAW Data (seperated by spaces) Broadcast Port
+
 Creator:
 Sarah Szabo
 https://github.com/SarahSzabo

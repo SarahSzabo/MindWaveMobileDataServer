@@ -153,7 +153,7 @@ public enum MindWaveServer {
         var thread = new Thread(() -> {
             while (true) {
                 System.out.println("Connecting to host = " + LOCAL_HOST + ", port = " + THINKGEAR_PORT);
-                try (var mindwaveSocket = SERVER_SOCKET.accept()) {
+                try ( var mindwaveSocket = SERVER_SOCKET.accept()) {
                     //Define variables
                     var mindwaveInput = mindwaveSocket.getInputStream();
                     var mindwaveReader = new BufferedReader(new InputStreamReader(mindwaveInput, Charset.forName("UTF-8")));
@@ -225,7 +225,7 @@ public enum MindWaveServer {
                 //Broadcast RAW Integers over UDP
                 var socket = new DatagramSocket();
                 var bytes = packet.toByteString().getBytes();
-                socket.send(new DatagramPacket(bytes, bytes.length, new InetSocketAddress(MINDWAVE_SERVER_RAW_BROADCAST)));
+                socket.send(new DatagramPacket(bytes, bytes.length, InetAddress.getLocalHost(), MINDWAVE_SERVER_RAW_BROADCAST));
 
                 //Close Sockets
                 socket.close();
