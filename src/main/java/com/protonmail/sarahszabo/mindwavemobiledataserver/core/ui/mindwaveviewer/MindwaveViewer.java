@@ -8,6 +8,8 @@ package com.protonmail.sarahszabo.mindwavemobiledataserver.core.ui.mindwaveviewe
 import com.protonmail.sarahszabo.mindwavemobiledataserver.core.mindwave.MindWavePacket;
 import com.protonmail.sarahszabo.mindwavemobiledataserver.core.mindwave.MindWaveServer;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
@@ -108,7 +110,12 @@ public class MindwaveViewer extends Application {
             //eSenseChart.setAnimated(false);
             //brainwaveChart.setAnimated(false);
             initDataReader();
-            iconImageView.setImage(new Image(getClass().getClassLoader().getResourceAsStream("pictures/KaguyaHime.jpg")));
+            //iconImageView.setImage(new Image(getClass().getClassLoader().getResourceAsStream("pictures/KH.jpg")));
+            //iconImageView.setImage(new Image(getClass().getClassLoader().getResourceAsStream("pictures/KaguyaHime.png")));
+            iconImageView.setImage(new Image(getClass().getClassLoader().getResourceAsStream("pictures/KHFinal.png")));
+            //iconImageView.setImage(new Image(Files.newInputStream(Paths.get("/home/sarah/Pictures/Profile Pictures/Retro Woman.gif"))));
+            /*iconImageView.setImage(new Image(Files.newInputStream(Paths.get("/home/sarah/Desktop/Dropbox/School/Current/"
+                    + "MAX MSP Utilities/MindWaveMobileDataServer/src/main/resources/pictures/KH.png"))));*/
 
             stage.show();
         } catch (IOException ex) {
