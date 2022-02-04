@@ -19,11 +19,11 @@ public class Init {
     /**
      * The name of the program.
      */
-    public static final String PROGRAM_NAME = "Mindwave Mobile Data Server (DS)";
+    public static final String PROGRAM_NAME = "Mindwave Mobile 2 EEG Data Server (DS)";
     /**
      * The version number of the program.
      */
-    public static final String PROGRAM_VERSION = "1.0α";
+    public static final String PROGRAM_VERSION = "2.0";
     /**
      * The full name + version number of the program.
      */

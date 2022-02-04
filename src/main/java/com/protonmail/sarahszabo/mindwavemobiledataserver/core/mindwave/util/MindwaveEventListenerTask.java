@@ -6,6 +6,8 @@ package com.protonmail.sarahszabo.mindwavemobiledataserver.core.mindwave.util;
 
 import com.protonmail.sarahszabo.mindwavemobiledataserver.core.mindwave.MindWavePacket;
 import com.protonmail.sarahszabo.mindwavemobiledataserver.core.mindwave.MindWaveServer;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -15,10 +17,25 @@ import java.util.logging.Logger;
  *
  * @author Sarah Szabo <SarahSzabo@Protonmail.com>
  */
-public class MindWave30HzListener implements MindwaveEventListener, Runnable {
+public class MindwaveEventListenerTask implements MindwaveEventListener, Runnable {
 
-    protected final Consumer<MindWavePacket> eventHandler;
-    protected MindWavePacket packet;
+    /**
+     * Launches a new event handler daemon thread with the specified name and
+     * function to implement.
+     *
+     * @param threadName The name of the thread
+     * @param eventHandler What to do when the
+     * {@link MindwaveEventListenerTask#mindwaveUpdate(com.protonmail.sarahszabo.mindwavemobiledataserver.core.mindwave.MindWavePacket)}
+     * method is called.
+     */
+    public static void launchMindwaveListenerThread(String threadName, Consumer<MindWavePacket> eventHandler) {
+        var thread = new Thread(new MindwaveEventListenerTask(eventHandler), threadName);
+        thread.setDaemon(true);
+        thread.start();
+    }
+
+    private final Consumer<MindWavePacket> eventHandler;
+    private final BlockingQueue<MindWavePacket> queue = new ArrayBlockingQueue<>(20);
 
     /**
      * Sets up the event handler which will be run ever time there is a new
@@ -29,26 +46,24 @@ public class MindWave30HzListener implements MindwaveEventListener, Runnable {
      * @param eventHandler What is run in the thread when we get the mindwave
      * event
      */
-    public MindWave30HzListener(Consumer<MindWavePacket> eventHandler) {
+    public MindwaveEventListenerTask(Consumer<MindWavePacket> eventHandler) {
         this.eventHandler = eventHandler;
         MindWaveServer.registerMindwaveEventListener(this);
     }
 
     @Override
     public void mindwaveUpdate(MindWavePacket packet) {
-        this.packet = packet;
+        this.queue.offer(packet);
     }
 
     @Override
     public void run() {
         try {
-            if (this.packet != null) {
-                this.eventHandler.accept(packet);
-                this.packet = null;
+            while (true) {
+                this.eventHandler.accept(this.queue.take());
             }
-            Thread.sleep(33);
         } catch (InterruptedException ex) {
-            throw new IllegalStateException("30Hz listener Interrupted while sleeping", ex);
+            throw new IllegalStateException("Mindwave Event Listener Thread Interrupted while waiting for a new mindwave event", ex);
         }
     }
 }

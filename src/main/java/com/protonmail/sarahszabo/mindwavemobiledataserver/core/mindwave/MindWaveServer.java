@@ -119,19 +119,14 @@ public enum MindWaveServer {
         if (type.equalsIgnoreCase("TGC-Emulator-Squarewave")) {
             emulatorType = () -> {
                 while (true) {
-                    var mindwavePacket = generateRandomPacket();
-                    System.out.println("Squarewave TGC-Emulator Thread Initial Packet:" + mindwavePacket);
-                    final int MAX = 7;
-                    for (int i = 0; i < MAX; i++) {
-                        System.out.println("Squarewave TGC-Emulator Thread Index:" + i + "/" + MAX);
+                    try {
+                        var mindwavePacket = generateRandomPacket();
+                        System.out.println("Squarewave TGC-Emulator Thread Initial Packet:" + mindwavePacket);
                         outputMindWavePacket(mindwavePacket);
-                        try {
-                            Thread.sleep(1000);
-                        } catch (InterruptedException ex) {
-                            Logger.getLogger(MindWaveServer.class.getName()).log(Level.SEVERE, null, ex);
-                        }
+                        Thread.sleep(1000);
+                    } catch (InterruptedException ex) {
+                        throw new IllegalStateException("TGC Emulator thread interrupted while sleeping", ex);
                     }
-
                 }
             };
         } //Use the random emulator type
@@ -152,7 +147,7 @@ public enum MindWaveServer {
                 }
             };
         }
-        var thread = new Thread(emulatorType, Init.PROGRAM_NAME + " ThingGearConnector (TGC) Emulator Thread");
+        var thread = new Thread(emulatorType, "ThingGearConnector (TGC) Emulator Thread");
         thread.setDaemon(true);
         thread.start();
     }
