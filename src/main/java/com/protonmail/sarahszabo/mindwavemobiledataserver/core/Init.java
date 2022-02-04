@@ -5,11 +5,8 @@ import com.protonmail.sarahszabo.mindwavemobiledataserver.core.ui.mindwaveviewer
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 import org.apache.commons.io.IOUtils;
 
 /**
@@ -36,6 +33,8 @@ public class Init {
      * The main method where the server starts.
      *
      * @param args The command line arguments
+     * @throws java.net.URISyntaxException
+     * @throws java.io.IOException
      */
     public static void main(String[] args) throws URISyntaxException, IOException {
         //TODO: Test Dummy Value Server
@@ -68,6 +67,7 @@ public class Init {
                     //Use Live TGC data
                 } else if (args[1].equalsIgnoreCase("TGC")) {
                     MindWaveServer.start();
+                    MindwaveViewer.initializeUI();
                 } else {
                     printHelpDocAndExit();
                 }

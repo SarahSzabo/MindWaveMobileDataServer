@@ -7,6 +7,7 @@ package com.protonmail.sarahszabo.mindwavemobiledataserver.core.ui.mindwaveviewe
 
 import com.protonmail.sarahszabo.mindwavemobiledataserver.core.mindwave.MindWavePacket;
 import com.protonmail.sarahszabo.mindwavemobiledataserver.core.mindwave.MindWaveServer;
+import com.protonmail.sarahszabo.mindwavemobiledataserver.core.mindwave.util.MindWave30HzListener;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -39,9 +40,6 @@ import org.apache.commons.lang3.concurrent.BasicThreadFactory;
  */
 public class MindwaveViewer extends Application {
 
-    private static final ExecutorService MINDWAVE_VIEWER_EXECUTOR = Executors.newSingleThreadExecutor(new BasicThreadFactory.Builder()
-            .daemon(true).namingPattern("Mindwave Viewer UI Controller Thread").build());
-
     /**
      * Starts the UI in it's own controller thread.
      */
@@ -51,14 +49,6 @@ public class MindwaveViewer extends Application {
         } else {
             MindwaveViewer.launch();
         }
-    }
-
-    /**
-     * Shuts down the UI thread executor. UI will no longer be responsive to
-     * data.
-     */
-    public static void shutdownUI() {
-        MINDWAVE_VIEWER_EXECUTOR.shutdown();
     }
 
     /**
@@ -140,7 +130,7 @@ public class MindwaveViewer extends Application {
      * Initializes the data reader executor.
      */
     private void initDataReader() {
-        MINDWAVE_VIEWER_EXECUTOR.submit(() -> {
+        var uiControllerThread = new Thread(new MindWave30HzListener((MindWavePacket packet) -> {
             //Assume Server Initialized Already
             while (true) {
                 /*
@@ -149,7 +139,6 @@ public class MindwaveViewer extends Application {
 
                     BRAINWAVE: DELTA, THETA, LOW_ALPHA, HIGH_ALPHA, LOW_BETA, HIGH_BETA, LOW_GAMMA, HIGH_GAMMA
                  */
-                var packet = MindWaveServer.MINDWAVESERVER.OUTPUT_QUEUE.take();
                 if (!packet.isBlinkOnly()) {
                     Platform.runLater(() -> {//eSense Data Series
                         var attention = new XYChart.Series<Number, Number>();
@@ -236,6 +225,8 @@ public class MindwaveViewer extends Application {
                     });
                 }
             }
-        });
+        }), "Mindwave Viewer Controller Thread");
+        uiControllerThread.setDaemon(true);
+        uiControllerThread.start();
     }
 }

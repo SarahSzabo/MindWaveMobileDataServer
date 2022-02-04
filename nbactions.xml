@@ -10,9 +10,12 @@
                 <goal>org.codehaus.mojo:exec-maven-plugin:1.5.0:exec</goal>
             </goals>
             <properties>
-                <exec.args>-agentlib:jdwp=transport=dt_socket,server=n,address=${jpda.address} -classpath %classpath com.protonmail.sarahszabo.mindwavemobiledataserver.core.Init Viewer TGC-Emulator-Squarewave</exec.args>
+                <exec.args>${exec.vmArgs} -classpath %classpath ${exec.mainClass} ${exec.appArgs}</exec.args>
                 <exec.executable>java</exec.executable>
                 <jpda.listen>true</jpda.listen>
+                <exec.appArgs>Viewer TGC</exec.appArgs>
+                <exec.vmArgs>-agentlib:jdwp=transport=dt_socket,server=n,address=${jpda.address}</exec.vmArgs>
+                <exec.mainClass>com.protonmail.sarahszabo.mindwavemobiledataserver.core.Init</exec.mainClass>
             </properties>
         </action>
         <action>
@@ -25,8 +28,11 @@
                 <goal>org.codehaus.mojo:exec-maven-plugin:1.5.0:exec</goal>
             </goals>
             <properties>
-                <exec.args>-classpath %classpath com.protonmail.sarahszabo.mindwavemobiledataserver.core.Init Viewer TGC-Emulator-Squarewave</exec.args>
+                <exec.args>${exec.vmArgs} -classpath %classpath ${exec.mainClass} ${exec.appArgs}</exec.args>
                 <exec.executable>java</exec.executable>
+                <exec.appArgs>Viewer TGC</exec.appArgs>
+                <exec.vmArgs></exec.vmArgs>
+                <exec.mainClass>com.protonmail.sarahszabo.mindwavemobiledataserver.core.Init</exec.mainClass>
             </properties>
         </action>
         <action>
@@ -39,8 +45,11 @@
                 <goal>org.codehaus.mojo:exec-maven-plugin:1.5.0:exec</goal>
             </goals>
             <properties>
-                <exec.args>-classpath %classpath com.protonmail.sarahszabo.mindwavemobiledataserver.core.Init Viewer TGC-Emulator-Squarewave</exec.args>
+                <exec.args>${exec.vmArgs} -classpath %classpath ${exec.mainClass} ${exec.appArgs}</exec.args>
                 <exec.executable>java</exec.executable>
+                <exec.appArgs>Viewer TGC</exec.appArgs>
+                <exec.vmArgs></exec.vmArgs>
+                <exec.mainClass>com.protonmail.sarahszabo.mindwavemobiledataserver.core.Init</exec.mainClass>
             </properties>
         </action>
     </actions>

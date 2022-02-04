@@ -9,7 +9,8 @@ import java.util.concurrent.ArrayBlockingQueue;
 
 /**
  * A blocking queue that only blocks if you're taking something. When adding
- * something, it removes the head (longest in the queue) element.
+ * something, it removes the head (longest in the queue) element if the queue is
+ * full.
  *
  * @author Sarah Szabo <SarahSzabo@Protonmail.com>
  * @param <T> The type
@@ -24,7 +25,6 @@ public class NoBlockAddBlockingQueue<T> extends ArrayBlockingQueue<T> {
     public boolean add(T e) {
         if (super.remainingCapacity() == 0) {
             super.remove(super.peek());
-
         }
         return super.add(e);
     }
