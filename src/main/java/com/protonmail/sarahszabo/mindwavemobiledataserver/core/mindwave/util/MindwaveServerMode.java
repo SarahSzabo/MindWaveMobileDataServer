@@ -14,7 +14,17 @@ import java.util.concurrent.atomic.AtomicReference;
  * @author Sarah Szabo <SarahSzabo@Protonmail.com>
  */
 public enum MindwaveServerMode {
-    TGC, SQUAREWAVE_EMULATED;
+    TGC {
+        @Override
+        public String toString() {
+            return "LIVE: Thinkgear Connector (TGC)";
+        }
+    }, SQUAREWAVE_EMULATED {
+        @Override
+        public String toString() {
+            return "EEG SQUAREWAVE EMULATOR";
+        }
+    };
 
     /**
      * The temporary holder packet for data. Reset to null when we send data to
@@ -55,6 +65,9 @@ public enum MindwaveServerMode {
     public void setData(MindWavePacket packet) {
         this.packet.set(packet);
     }
+
+    @Override
+    public abstract String toString();
 ;
 
 }

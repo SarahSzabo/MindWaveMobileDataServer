@@ -10,6 +10,7 @@ import com.illposed.osc.OSCMessage;
 import com.illposed.osc.OSCPacket;
 import com.illposed.osc.OSCSerializeException;
 import com.illposed.osc.transport.OSCPortOut;
+import com.protonmail.sarahszabo.mindwavemobiledataserver.core.Init;
 import com.protonmail.sarahszabo.mindwavemobiledataserver.core.mindwave.util.MindwaveEventListener;
 import com.protonmail.sarahszabo.mindwavemobiledataserver.core.mindwave.util.MindwaveServerMode;
 import java.io.BufferedReader;
@@ -74,6 +75,11 @@ public enum MindWaveServer {
      * The maximum range for brainwaves.
      */
     private static final int BRAINWAVE_MAX_VALUE = 4_000_000;
+
+    /**
+     * The command string to start the squarewave emulator.
+     */
+    private static final String SQUAREWAVE_EMULATOR_COMMAND = "TGC-Emulator-Squarewave";
 
     /**
      * The connection status of the EEG. Used for monitoring which mode we are
@@ -145,8 +151,8 @@ public enum MindWaveServer {
                     try {
                         var mindwavePacket = generateRandomPacket();
                         System.out.println("Squarewave TGC-Emulator Thread Initial Packet:" + mindwavePacket);
-                        outputMindWavePacket(mindwavePacket);
-                        Thread.sleep(1000);
+                        MindwaveServerMode.SQUAREWAVE_EMULATED.setData(mindwavePacket);
+                        Thread.sleep(33);
                     } catch (InterruptedException ex) {
                         throw new IllegalStateException("TGC Squarewave Emulator thread interrupted while sleeping", ex);
                     }
@@ -195,7 +201,7 @@ public enum MindWaveServer {
                                 System.out.println("JSON TEXT RAW: \n\n" + sourceJson);
                                 try {
                                     var newPacket = new MindWavePacket(sourceJson);
-                                    outputMindWavePacket(newPacket);
+                                    MindwaveServerMode.TGC.setData(newPacket);
                                     //TODO Atomic Reference
                                 } catch (JSONException je) {
                                     System.err.println("JSON Exception Caught, Continuing Loop");
@@ -216,6 +222,52 @@ public enum MindWaveServer {
             }
         }, "TGC Live Data Connect/Decode/Export Thread");
         //This makes sense only with the GUI Viewer
+        thread.setDaemon(true);
+        thread.start();
+
+        //Always start the squarewave emulator with TGC in case of dropping
+        startEmulatorThread(SQUAREWAVE_EMULATOR_COMMAND);
+    }
+
+    /**
+     * Starts the thread which calls for output once a second.
+     */
+    private void startOutputThread() {
+        //If TGC, check for data, if none, set to Emulator. If in emulator, check for TGC.
+        var thread = new Thread(() -> {
+            while (true) {
+                if (SERVER_MODE.get() == MindwaveServerMode.TGC) {
+                    //Try and get something from TGC
+                    boolean canReachTGC = false;
+                    //Do for 4 seconds
+                    for (int i = 0; i < 12; i++) {
+                        if (MindwaveServerMode.TGC.isReady()) {
+                            canReachTGC = true;
+                            break;
+                        } else {
+                            try {
+                                Thread.sleep(333);
+                            } catch (InterruptedException ex) {
+                                throw new IllegalStateException("Output thread selector interrupted while sleeping", ex);
+                            }
+                        }
+                    }
+                    if (canReachTGC) {
+                        outputMindWavePacket(MindwaveServerMode.TGC.getData());
+                    } else {
+                        SERVER_MODE.set(MindwaveServerMode.SQUAREWAVE_EMULATED);
+                        continue;
+                    }
+                } else {
+                    if (MindwaveServerMode.TGC.isReady()) {
+                        SERVER_MODE.set(MindwaveServerMode.TGC);
+                        continue;
+                    } else {
+                        outputMindWavePacket(MindwaveServerMode.SQUAREWAVE_EMULATED.getData());
+                    }
+                }
+            }
+        }, Init.PROGRAM_NAME + " Output Decider Thread");
         thread.setDaemon(true);
         thread.start();
     }

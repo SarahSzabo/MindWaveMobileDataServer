@@ -9,6 +9,7 @@ import com.protonmail.sarahszabo.mindwavemobiledataserver.core.Init;
 import com.protonmail.sarahszabo.mindwavemobiledataserver.core.mindwave.MindWavePacket;
 import com.protonmail.sarahszabo.mindwavemobiledataserver.core.mindwave.MindWaveServer;
 import com.protonmail.sarahszabo.mindwavemobiledataserver.core.mindwave.util.MindwaveEventListenerTask;
+import com.protonmail.sarahszabo.mindwavemobiledataserver.core.mindwave.util.MindwaveServerMode;
 import com.protonmail.sarahszabo.mindwavemobiledataserver.core.mindwave.util.MindwaveStatus;
 import java.io.File;
 import java.io.IOException;
@@ -185,6 +186,12 @@ public class MindwaveViewer extends Application {
             } catch (InterruptedException ex) {
                 Logger.getLogger(MindwaveViewer.class.getName()).log(Level.SEVERE, null, ex);
             }
+        });
+    }
+
+    public void changeMode(MindwaveServerMode mode) {
+        Platform.runLater(() -> {
+            this.labelDataSource.setText(mode.toString());
         });
     }
 

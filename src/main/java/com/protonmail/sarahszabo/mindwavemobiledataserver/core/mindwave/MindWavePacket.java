@@ -5,6 +5,7 @@
  */
 package com.protonmail.sarahszabo.mindwavemobiledataserver.core.mindwave;
 
+import com.protonmail.sarahszabo.mindwavemobiledataserver.core.mindwave.util.ThinkGearServerConnectionQuality;
 import java.time.LocalTime;
 import java.util.logging.Logger;
 import org.json.JSONObject;
