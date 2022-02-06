@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import java.net.URL?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
@@ -8,20 +10,18 @@
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
 
-<AnchorPane id="AnchorPane" prefHeight="727.0" prefWidth="821.0" styleClass="mainFxmlClass" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1">
+<AnchorPane id="AnchorPane" prefHeight="727.0" prefWidth="821.0" styleClass="mainFxmlClass" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1">
     <stylesheets>
         <URL value="@mindwaveviewerfxml.css" />
     </stylesheets>
    <children>
       <BorderPane fx:id="baseBorderPane" layoutX="200.0" layoutY="-128.0" prefHeight="550.0" prefWidth="711.0" style="-fx-background-color: black;" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-         <right>
-            <ImageView fx:id="iconImageView" fitHeight="282.0" fitWidth="298.0" pickOnBounds="true" preserveRatio="true" BorderPane.alignment="CENTER">
-               <image>
-                  <Image url="@../../../../../../../../../../Pictures/Kaguya%20Hime/PrincessKaguya.jpg" />
-               </image>
-            </ImageView>
-         </right>
          <top>
             <MenuBar styleClass="mainMenuBar" stylesheets="@mindwaveviewerfxml.css" BorderPane.alignment="CENTER">
               <menus>
@@ -38,6 +38,57 @@
               </menus>
             </MenuBar>
          </top>
+         <right>
+            <GridPane fx:id="rightGridPane" minWidth="400.0">
+              <columnConstraints>
+                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+              </columnConstraints>
+              <rowConstraints>
+                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+              </rowConstraints>
+               <children>
+                  <ImageView fx:id="iconImageView" fitHeight="200.0" fitWidth="349.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@../pictures/KaguyaHime.png" />
+                     </image>
+                  </ImageView>
+                  <VBox GridPane.rowIndex="1">
+                     <children>
+                        <Label text="Data Source:" textAlignment="CENTER" textFill="WHITE" wrapText="true">
+                           <font>
+                              <Font size="26.0" />
+                           </font>
+                           <padding>
+                              <Insets top="30.0" />
+                           </padding>
+                        </Label>
+                        <Label fx:id="labelDataSource" minHeight="-Infinity" minWidth="-Infinity" text="NONE" textFill="#1cf552" wrapText="true">
+                           <font>
+                              <Font size="26.0" />
+                           </font>
+                        </Label>
+                     </children>
+                  </VBox>
+                  <VBox GridPane.rowIndex="2">
+                     <children>
+                        <Label minHeight="-Infinity" minWidth="-Infinity" text="EEG Connection Status:" textAlignment="CENTER" textFill="WHITE" wrapText="true">
+                           <font>
+                              <Font size="26.0" />
+                           </font>
+                        </Label>
+                        <Label fx:id="labelEEGConnectionStatus" minHeight="-Infinity" minWidth="-Infinity" text="DISCONNECTED" textFill="#1cf552" wrapText="true">
+                           <font>
+                              <Font size="26.0" />
+                           </font>
+                        </Label>
+                     </children>
+                  </VBox>
+               </children>
+            </GridPane>
+         </right>
       </BorderPane>
    </children>
 </AnchorPane>

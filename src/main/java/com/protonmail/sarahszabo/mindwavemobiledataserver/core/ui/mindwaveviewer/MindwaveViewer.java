@@ -9,30 +9,35 @@ import com.protonmail.sarahszabo.mindwavemobiledataserver.core.Init;
 import com.protonmail.sarahszabo.mindwavemobiledataserver.core.mindwave.MindWavePacket;
 import com.protonmail.sarahszabo.mindwavemobiledataserver.core.mindwave.MindWaveServer;
 import com.protonmail.sarahszabo.mindwavemobiledataserver.core.mindwave.util.MindwaveEventListenerTask;
+import com.protonmail.sarahszabo.mindwavemobiledataserver.core.mindwave.util.MindwaveStatus;
+import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.chart.AreaChart;
-import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
-import javafx.scene.chart.StackedAreaChart;
 import javafx.scene.chart.XYChart;
 import javafx.scene.chart.XYChart.Data;
 import javafx.scene.chart.XYChart.Series;
+import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
-import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 
 /**
  * An application class that is a visualizer for {@link MindWavePacket}s.
@@ -70,19 +75,59 @@ public class MindwaveViewer extends Application {
     private BorderPane baseBorderPane;
 
     @FXML
+    private ImageView iconImageView;
+
+    @FXML
+    private GridPane rightGridPane;
+
+    @FXML
+    private Label labelDataSource;
+
+    @FXML
+    private Label labelEEGConnectionStatus;
+
+    @FXML
     private AreaChart<Number, Number> eSenseChart;
 
     @FXML
     private AreaChart<Number, Number> brainwaveChart;
 
     @FXML
-    private ImageView iconImageView;
-
-    @FXML
     void initialize() {
         assert baseBorderPane != null : "fx:id=\"baseGridPane\" was not injected: check your FXML file 'MindWaveViewerFXML.fxml'.";
         assert eSenseChart != null : "fx:id=\"eSenseChart\" was not injected: check your FXML file 'MindWaveViewerFXML.fxml'.";
         assert brainwaveChart != null : "fx:id=\"brainwaveChart\" was not injected: check your FXML file 'MindWaveViewerFXML.fxml'.";
+    }
+
+    /**
+     * Changes the stage icon view to an appropriate response to the current
+     * {@link MindwaveStatus}. If default is used, this resets to the normal
+     * picture.
+     *
+     * @param status The status the mindwaves are currently in
+     */
+    private void imageTo(MindwaveStatus status) {
+        if (status == MindwaveStatus.ATTENTION_DOMINANT) {
+            this.iconImageView.setImage(new Image(getClass().getClassLoader()
+                    .getResource(getRandomImageFromPackage(MindwaveStatus.ATTENTION_DOMINANT)).toString()));
+        } else if (status == MindwaveStatus.MEDITATION_DOMINANT) {
+            this.iconImageView.setImage(new Image(getClass().getClassLoader()
+                    .getResource(getRandomImageFromPackage(MindwaveStatus.MEDITATION_DOMINANT)).toString()));
+        } else {
+            this.iconImageView.setImage(new Image(getClass().getClassLoader().getResourceAsStream("pictures/KHFinal.png")));
+        }
+    }
+
+    /**
+     * Gets a picture from the classpath pictures folder.
+     *
+     * @param packageName The string path (in package format) to the classpath
+     * folder
+     * @return The random picture
+     */
+    private String getRandomImageFromPackage(MindwaveStatus status) {
+        var list = status.getPicturesFilenames();
+        return list.get(new Random().nextInt(list.size()));
     }
 
     @Override
@@ -96,17 +141,14 @@ public class MindwaveViewer extends Application {
             var fxmlLoader = new FXMLLoader(getClass().getClassLoader().getResource("fxml/MindWaveViewer.fxml"));
             fxmlLoader.setController(this);
             stage.setScene(new Scene(fxmlLoader.load()));
-            stage.getIcons().add(new Image(getClass().getClassLoader().getResourceAsStream("pictures/KaguyaHime.jpg")));
+            stage.getIcons().add(new Image(getClass().getClassLoader().getResourceAsStream("pictures/KaguyaHime.png")));
 
+            //Launch Helper Threads
+            initImageChangerThread();
             //eSenseChart.setAnimated(false);
             //brainwaveChart.setAnimated(false);
             initChartDataListenerThread();
-            //iconImageView.setImage(new Image(getClass().getClassLoader().getResourceAsStream("pictures/KH.jpg")));
-            //iconImageView.setImage(new Image(getClass().getClassLoader().getResourceAsStream("pictures/KaguyaHime.png")));
             iconImageView.setImage(new Image(getClass().getClassLoader().getResourceAsStream("pictures/KHFinal.png")));
-            //iconImageView.setImage(new Image(Files.newInputStream(Paths.get("/home/sarah/Pictures/Profile Pictures/Retro Woman.gif"))));
-            /*iconImageView.setImage(new Image(Files.newInputStream(Paths.get("/home/sarah/Desktop/Dropbox/School/Current/"
-                    + "MAX MSP Utilities/MindWaveMobileDataServer/src/main/resources/pictures/KH.png"))));*/
 
             stage.show();
         } catch (IOException ex) {
@@ -125,6 +167,25 @@ public class MindwaveViewer extends Application {
 
         baseBorderPane.setCenter(eSenseChart);
         baseBorderPane.setBottom(brainwaveChart);
+    }
+
+    /**
+     * Launches the thread which looks for and changes the image based on the
+     * status of the mindwaves.
+     */
+    private void initImageChangerThread() {
+        MindwaveEventListenerTask.launchMindwaveListenerThread("Mindwave Viewer Image Changer Thread", (var packet) -> {
+            try {
+                Thread.sleep(4000);
+                Platform.runLater(() -> imageTo(MindwaveStatus.ATTENTION_DOMINANT));
+                Thread.sleep(4000);
+                Platform.runLater(() -> imageTo(MindwaveStatus.DEFAULT));
+                Thread.sleep(4000);
+                Platform.runLater(() -> imageTo(MindwaveStatus.MEDITATION_DOMINANT));
+            } catch (InterruptedException ex) {
+                Logger.getLogger(MindwaveViewer.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        });
     }
 
     /**
@@ -222,6 +283,9 @@ public class MindwaveViewer extends Application {
                         setNew(brainwaveData.get(6), new Data<>(20, packet.getLowGamma()));
                         setNew(brainwaveData.get(7), new Data<>(20, packet.getHighGamma()));
                     }
+
+                    //Do other listener stuff
+                    this.labelEEGConnectionStatus.setText(packet.isPoorConnectionQuality().toString());
                 });
             }
         });

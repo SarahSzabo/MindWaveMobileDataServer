@@ -10,7 +10,7 @@ import com.illposed.osc.OSCBundle;
 import com.illposed.osc.OSCMessage;
 import com.illposed.osc.OSCPacket;
 import com.illposed.osc.OSCSerializeException;
-import com.illposed.osc.transport.udp.OSCPortOut;
+import com.illposed.osc.transport.OSCPortOut;
 import com.protonmail.sarahszabo.mindwavemobiledataserver.core.Init;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -245,10 +245,12 @@ public enum MindWaveServer {
                 socket.close();
                 oscOut.close();
             }
-        } catch (OSCSerializeException | IOException ex) {
+        } catch (IOException ex) {
             Logger.getLogger(MindWaveServer.class
                     .getName()).log(Level.SEVERE, null, ex);
             throw new IllegalStateException("Something messed up when sending an OSC Packet", ex);
+        } catch (OSCSerializeException ex) {
+            Logger.getLogger(MindWaveServer.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
