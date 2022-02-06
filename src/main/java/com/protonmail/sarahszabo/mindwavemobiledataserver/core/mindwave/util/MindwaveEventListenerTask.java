@@ -27,11 +27,13 @@ public class MindwaveEventListenerTask implements MindwaveEventListener, Runnabl
      * @param eventHandler What to do when the
      * {@link MindwaveEventListenerTask#mindwaveUpdate(com.protonmail.sarahszabo.mindwavemobiledataserver.core.mindwave.MindWavePacket)}
      * method is called.
+     * @return The thread that was just started
      */
-    public static void launchMindwaveListenerThread(String threadName, Consumer<MindWavePacket> eventHandler) {
+    public static Thread launchMindwaveListenerThread(String threadName, Consumer<MindWavePacket> eventHandler) {
         var thread = new Thread(new MindwaveEventListenerTask(eventHandler), threadName);
         thread.setDaemon(true);
         thread.start();
+        return thread;
     }
 
     private final Consumer<MindWavePacket> eventHandler;

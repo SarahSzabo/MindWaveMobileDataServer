@@ -10,7 +10,7 @@ import java.util.logging.Logger;
 import org.json.JSONObject;
 
 /**
- * A class representing a packet from the Neurosky Mindwave Mobile hardware is
+ * A class representing a packet from the Neurosky Mindwave Mobile hardware in
  * JSON format.
  *
  * @author Sarah Szabo <PhysicistSarah@Gmail.com>

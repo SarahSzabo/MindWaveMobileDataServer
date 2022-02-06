@@ -5,20 +5,19 @@
  */
 package com.protonmail.sarahszabo.mindwavemobiledataserver.core.mindwave;
 
-import com.protonmail.sarahszabo.mindwavemobiledataserver.core.mindwave.util.MindwaveEventListener;
 import com.illposed.osc.OSCBundle;
 import com.illposed.osc.OSCMessage;
 import com.illposed.osc.OSCPacket;
 import com.illposed.osc.OSCSerializeException;
 import com.illposed.osc.transport.OSCPortOut;
-import com.protonmail.sarahszabo.mindwavemobiledataserver.core.Init;
+import com.protonmail.sarahszabo.mindwavemobiledataserver.core.mindwave.util.MindwaveEventListener;
+import com.protonmail.sarahszabo.mindwavemobiledataserver.core.mindwave.util.MindwaveServerMode;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.nio.charset.Charset;
@@ -26,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.json.JSONException;
@@ -41,15 +41,51 @@ public enum MindWaveServer {
      */
     MINDWAVESERVER();
 
+    /**
+     * String for local host.
+     */
     private static final String LOCAL_HOST = "127.0.0.1";
-    private static final int THINKGEAR_PORT = 13854, MINDWAVE_SERVER_PORT = 45_000, MINDWAVE_SERVER_OSC_BROADCAST = MINDWAVE_SERVER_PORT + 1,
+    /**
+     * The thinkgear port.
+     */
+    private static final int THINKGEAR_PORT = 13854,
+            /**
+             * The mindwave server port that we have reserved.
+             */
+            MINDWAVE_SERVER_PORT = 45_000,
+            /**
+             * The port we use for OSC broadcasting.
+             */
+            MINDWAVE_SERVER_OSC_BROADCAST = MINDWAVE_SERVER_PORT + 1,
+            /**
+             * The port we use for raw OSC broadcasting.
+             */
             MINDWAVE_SERVER_RAW_BROADCAST = MINDWAVE_SERVER_OSC_BROADCAST + 1;
+    /**
+     * The command string we use to enable JSON output from TGC.
+     */
     private static final String TO_JSON_COMMAND = "{\"enableRawOutput\": false, \"format\": \"Json\"}\n";
+    /**
+     * Our authorization to TGC command string.
+     */
     private static final String AUTHORIZE_APP_COMMAND = "{\"appName\": \"Mindwave Mobile 2 Data Server\", \"appKey\":"
             + "\"55cf229b95b3fafa976b385af1b5670a817208d2\"}";
-    private static ServerSocket SERVER_SOCKET;
+    /**
+     * The maximum range for brainwaves.
+     */
     private static final int BRAINWAVE_MAX_VALUE = 4_000_000;
 
+    /**
+     * The connection status of the EEG. Used for monitoring which mode we are
+     * in, and which thread gets to output data to the GUI / port. By default,
+     * this is set to TGC mode.
+     */
+    private static final AtomicReference<MindwaveServerMode> SERVER_MODE = new AtomicReference<>(MindwaveServerMode.TGC);
+
+    /**
+     * A sentinel which ensures that the server has not already been
+     * initialized.
+     */
     private static boolean initialied = false;
 
     /**
@@ -67,18 +103,6 @@ public enum MindWaveServer {
     }
 
     /**
-     * Sets up the server socket.
-     */
-    private static void initializeServerSocket() {
-        try {
-            SERVER_SOCKET = new ServerSocket(THINKGEAR_PORT);
-        } catch (IOException ex) {
-            Logger.getLogger(MindWaveServer.class.getName()).log(Level.SEVERE, null, ex);
-            throw new IllegalStateException("Unable to initialize Mindwave Server Socket", ex);
-        }
-    }
-
-    /**
      * Checks the initialization state. THrows an exception if we're already
      * initialized.
      */
@@ -93,7 +117,7 @@ public enum MindWaveServer {
         return new MindWavePacket(rand.nextInt(101), rand.nextInt(101), rand.nextInt(101),
                 rand.nextInt(101), rand.nextInt(BRAINWAVE_MAX_VALUE), rand.nextInt(BRAINWAVE_MAX_VALUE), rand.nextInt(BRAINWAVE_MAX_VALUE),
                 rand.nextInt(BRAINWAVE_MAX_VALUE), rand.nextInt(BRAINWAVE_MAX_VALUE), rand.nextInt(BRAINWAVE_MAX_VALUE),
-                rand.nextInt(BRAINWAVE_MAX_VALUE), rand.nextInt(BRAINWAVE_MAX_VALUE), rand.nextInt(101), 0);
+                rand.nextInt(BRAINWAVE_MAX_VALUE), rand.nextInt(BRAINWAVE_MAX_VALUE), rand.nextInt(101), 200);
     }
 
     /**
@@ -112,7 +136,6 @@ public enum MindWaveServer {
      */
     public static void startEmulatorThread(String type) {
         checkInitialization();
-        initializeServerSocket();
         initialied = true;
         Runnable emulatorType;
         //Use the Hold-Value emulator type
@@ -125,27 +148,13 @@ public enum MindWaveServer {
                         outputMindWavePacket(mindwavePacket);
                         Thread.sleep(1000);
                     } catch (InterruptedException ex) {
-                        throw new IllegalStateException("TGC Emulator thread interrupted while sleeping", ex);
+                        throw new IllegalStateException("TGC Squarewave Emulator thread interrupted while sleeping", ex);
                     }
                 }
             };
-        } //Use the random emulator type
+        } //Not recognized
         else {
-            emulatorType = () -> {
-                System.out.println("Starting TGC Emulator Thread");
-                while (true) {
-                    try {
-                        var randomPacket = generateRandomPacket();
-                        System.out.println("Emulated Packet Created:\n\n" + randomPacket);
-                        outputMindWavePacket(randomPacket);
-                        Thread.sleep(1000);
-                    } catch (InterruptedException ex) {
-                        Logger.getLogger(MindWaveServer.class.getName()).log(Level.SEVERE, null, ex);
-                        throw new IllegalStateException("The Mindwave Server test data creator thread was interrupted", ex);
-                    }
-
-                }
-            };
+            throw new IllegalStateException(type + " emulator not recognized. Misspelling of argument?");
         }
         var thread = new Thread(emulatorType, "ThingGearConnector (TGC) Emulator Thread");
         thread.setDaemon(true);
@@ -159,46 +168,53 @@ public enum MindWaveServer {
     public static void start() {
         checkInitialization();
         initialied = true;
+        //Launch authorization thread
         var thread = new Thread(() -> {
             while (true) {
-                System.out.println("Connecting to host = " + LOCAL_HOST + ", port = " + THINKGEAR_PORT);
-                try (var mindwaveSocket = new Socket(LOCAL_HOST, THINKGEAR_PORT)) {
-                    //Define variables
-                    var mindwaveInput = mindwaveSocket.getInputStream();
-                    var mindwaveReader = new BufferedReader(new InputStreamReader(mindwaveInput, Charset.forName("UTF-8")));
-                    var mindwaveOutput = mindwaveSocket.getOutputStream();
-                    //Write to output
-                    System.out.println("Requesting Authorization: " + AUTHORIZE_APP_COMMAND);
-                    mindwaveOutput.write(TO_JSON_COMMAND.getBytes());
-                    mindwaveOutput.flush();
-                    //Wait for authorization
-                    System.out.println("Waiting for Authorization (3 Seconds)...");
-                    Thread.sleep(3000);
-                    if (mindwaveReader.ready()) {
-                        System.out.println("Authorization: " + mindwaveReader.readLine());
-                    }
-                    //Start 60Hz Loop
-                    while (true) {
+                try {
+                    System.out.println("Connecting to host = " + LOCAL_HOST + ", port = " + THINKGEAR_PORT);
+                    try (var mindwaveSocket = new Socket(LOCAL_HOST, THINKGEAR_PORT)) {
+                        //Define variables
+                        var mindwaveInput = mindwaveSocket.getInputStream();
+                        var mindwaveReader = new BufferedReader(new InputStreamReader(mindwaveInput, Charset.forName("UTF-8")));
+                        var mindwaveOutput = mindwaveSocket.getOutputStream();
+                        //Write to output
+                        System.out.println("Requesting Authorization: " + AUTHORIZE_APP_COMMAND);
+                        mindwaveOutput.write(TO_JSON_COMMAND.getBytes());
+                        mindwaveOutput.flush();
+                        //Wait for authorization
+                        System.out.println("Waiting for Authorization (3 Seconds)...");
+                        Thread.sleep(3000);
                         if (mindwaveReader.ready()) {
-                            String sourceJson = mindwaveReader.readLine();
-                            System.out.println("JSON TEXT RAW: \n\n" + sourceJson);
-                            try {
-                                var newPacket = new MindWavePacket(sourceJson);
-                                outputMindWavePacket(newPacket);
-                            } catch (JSONException je) {
-                                System.err.println("JSON Exception Caught, Continuing Loop");
-                            }
+                            System.out.println("Authorization: " + mindwaveReader.readLine());
                         }
-                        //.03333333333333 ms = 1/30 s = 30Hz
-                        Thread.sleep(33);
+                        //Start 30Hz Loop
+                        while (true) {
+                            if (mindwaveReader.ready()) {
+                                String sourceJson = mindwaveReader.readLine();
+                                System.out.println("JSON TEXT RAW: \n\n" + sourceJson);
+                                try {
+                                    var newPacket = new MindWavePacket(sourceJson);
+                                    outputMindWavePacket(newPacket);
+                                    //TODO Atomic Reference
+                                } catch (JSONException je) {
+                                    System.err.println("JSON Exception Caught, Continuing Loop");
+                                }
+                            }
+                            //.03333333333333 ms = 1/30 s = 30Hz
+                            Thread.sleep(33);
+                        }
+                    } catch (InterruptedException | IOException ex) {
+                        //Logger.getLogger(MindWaveServer.class.getName()).log(Level.SEVERE, null, ex);
+                        System.err.println("Exception Caught: " + ex);
                     }
-                } catch (InterruptedException | IOException ex) {
-                    //Logger.getLogger(MindWaveServer.class.getName()).log(Level.SEVERE, null, ex);
-                    System.err.println("Exception Caught: " + ex);
+                    System.out.println("Connection to ThinkGear Connector Dropped \nAttempting Reconnection");
+                    Thread.sleep(33);
+                } catch (InterruptedException ex) {
+                    throw new IllegalStateException("TGC authorization thrad interrupted while sleeping", ex);
                 }
-                System.out.println("Connection to ThinkGear Connector Dropped \nAttempting Reconnection");
             }
-        }, Init.PROGRAM_NAME + " Live Data Decode/Export Thread");
+        }, "TGC Live Data Connect/Decode/Export Thread");
         //This makes sense only with the GUI Viewer
         thread.setDaemon(true);
         thread.start();
