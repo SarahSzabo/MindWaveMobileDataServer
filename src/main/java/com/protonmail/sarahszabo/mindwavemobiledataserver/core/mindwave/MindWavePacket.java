@@ -7,6 +7,7 @@ package com.protonmail.sarahszabo.mindwavemobiledataserver.core.mindwave;
 
 import com.protonmail.sarahszabo.mindwavemobiledataserver.core.mindwave.util.ThinkGearServerConnectionQuality;
 import java.time.LocalTime;
+import java.util.Random;
 import java.util.logging.Logger;
 import org.json.JSONObject;
 
@@ -19,6 +20,29 @@ import org.json.JSONObject;
 public class MindWavePacket {
 
     private static final Logger LOG = Logger.getLogger(MindWavePacket.class.getName());
+
+    /**
+     * Generates a random brainwave packet with the default scaling.
+     *
+     * @return The randomly generated packet
+     */
+    public static MindWavePacket generateRandomPacket() {
+        return generateRandomPacket(MindWaveServer.BRAINWAVE_MAX_VALUE);
+    }
+
+    /**
+     * Generates a random brainwave packet.
+     *
+     * @param BRAINWAVE_MAX_VALUE The scale maximum value for the brainwaves
+     * @return The randomly generated packet
+     */
+    public static MindWavePacket generateRandomPacket(int BRAINWAVE_MAX_VALUE) {
+        var rand = new Random();
+        return new MindWavePacket(rand.nextInt(101), rand.nextInt(101), rand.nextInt(101),
+                rand.nextInt(101), rand.nextInt(BRAINWAVE_MAX_VALUE), rand.nextInt(BRAINWAVE_MAX_VALUE), rand.nextInt(BRAINWAVE_MAX_VALUE),
+                rand.nextInt(BRAINWAVE_MAX_VALUE), rand.nextInt(BRAINWAVE_MAX_VALUE), rand.nextInt(BRAINWAVE_MAX_VALUE),
+                rand.nextInt(BRAINWAVE_MAX_VALUE), rand.nextInt(BRAINWAVE_MAX_VALUE), rand.nextInt(101), 200);
+    }
 
     private final int attention, meditation, mentalEffort, familiarity, delta, theta,
             lowAlpha, highAlpha, lowBeta, highBeta, lowGamma, highGamma, blinkStrength, poorSignalLevel;

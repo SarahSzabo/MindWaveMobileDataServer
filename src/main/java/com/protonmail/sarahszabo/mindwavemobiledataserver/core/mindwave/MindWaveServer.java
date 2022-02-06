@@ -13,6 +13,7 @@ import com.illposed.osc.transport.OSCPortOut;
 import com.protonmail.sarahszabo.mindwavemobiledataserver.core.Init;
 import com.protonmail.sarahszabo.mindwavemobiledataserver.core.mindwave.util.MindwaveEventListener;
 import com.protonmail.sarahszabo.mindwavemobiledataserver.core.mindwave.util.MindwaveServerMode;
+import com.protonmail.sarahszabo.mindwavemobiledataserver.core.mindwave.util.MindwaveServerStatusListener;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -25,7 +26,6 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Random;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -74,7 +74,7 @@ public enum MindWaveServer {
     /**
      * The maximum range for brainwaves.
      */
-    private static final int BRAINWAVE_MAX_VALUE = 4_000_000;
+    public static final int BRAINWAVE_MAX_VALUE = 4_000_000;
 
     /**
      * The command string to start the squarewave emulator.
@@ -97,7 +97,30 @@ public enum MindWaveServer {
     /**
      * The mindwave event listener list
      */
-    private static final List<MindwaveEventListener> eventListeners = new ArrayList<>(20);
+    private static final List<MindwaveEventListener> EVENT_LISTENERS = new ArrayList<>(20);
+
+    /**
+     * The mindwave event listener list
+     */
+    private static final List<MindwaveServerStatusListener> SERVER_STATUS_LISTENERS = new ArrayList<>(2);
+
+    /**
+     * Gets the current server mode.
+     *
+     * @return The current mode the server is in
+     */
+    public static MindwaveServerMode currentMode() {
+        return SERVER_MODE.get();
+    }
+
+    /**
+     * Registers an event listener for updates to the mindwave EEG packets.
+     *
+     * @param listener The listener to register
+     */
+    public static void registerServerStatusListener(MindwaveServerStatusListener listener) {
+        SERVER_STATUS_LISTENERS.add(listener);
+    }
 
     /**
      * Registers an event listener for updates to the mindwave EEG packets.
@@ -105,7 +128,7 @@ public enum MindWaveServer {
      * @param listener The listener to register
      */
     public static void registerMindwaveEventListener(MindwaveEventListener listener) {
-        eventListeners.add(listener);
+        EVENT_LISTENERS.add(listener);
     }
 
     /**
@@ -118,18 +141,15 @@ public enum MindWaveServer {
         }
     }
 
-    private static MindWavePacket generateRandomPacket() {
-        var rand = new Random();
-        return new MindWavePacket(rand.nextInt(101), rand.nextInt(101), rand.nextInt(101),
-                rand.nextInt(101), rand.nextInt(BRAINWAVE_MAX_VALUE), rand.nextInt(BRAINWAVE_MAX_VALUE), rand.nextInt(BRAINWAVE_MAX_VALUE),
-                rand.nextInt(BRAINWAVE_MAX_VALUE), rand.nextInt(BRAINWAVE_MAX_VALUE), rand.nextInt(BRAINWAVE_MAX_VALUE),
-                rand.nextInt(BRAINWAVE_MAX_VALUE), rand.nextInt(BRAINWAVE_MAX_VALUE), rand.nextInt(101), 200);
-    }
-
     /**
      * Starts the packet creator thread. Makes random packets for testing
      * purposes.
+     *
+     * @deprecated Currently, we have no use for this thread, but there is a
+     * possibility it may be used in the future for more compelx emulation
+     * requirements.
      */
+    @Deprecated
     public static void startEmulatorThread() {
         startEmulatorThread("");
     }
@@ -139,20 +159,23 @@ public enum MindWaveServer {
      * purposes.
      *
      * @param type The type of emulator to start
+     * @deprecated Currently, we have no use for this thread, but there is a
+     * possibility it may be used in the future for more compelx emulation
+     * requirements.
      */
+    @Deprecated
     public static void startEmulatorThread(String type) {
-        checkInitialization();
-        initialied = true;
         Runnable emulatorType;
         //Use the Hold-Value emulator type
         if (type.equalsIgnoreCase("TGC-Emulator-Squarewave")) {
             emulatorType = () -> {
                 while (true) {
                     try {
-                        var mindwavePacket = generateRandomPacket();
+                        var mindwavePacket = MindWavePacket.generateRandomPacket(BRAINWAVE_MAX_VALUE);
                         System.out.println("Squarewave TGC-Emulator Thread Initial Packet:" + mindwavePacket);
                         MindwaveServerMode.SQUAREWAVE_EMULATED.setData(mindwavePacket);
                         Thread.sleep(33);
+                        break;
                     } catch (InterruptedException ex) {
                         throw new IllegalStateException("TGC Squarewave Emulator thread interrupted while sleeping", ex);
                     }
@@ -226,13 +249,25 @@ public enum MindWaveServer {
         thread.start();
 
         //Always start the squarewave emulator with TGC in case of dropping
-        startEmulatorThread(SQUAREWAVE_EMULATOR_COMMAND);
+        //startEmulatorThread(SQUAREWAVE_EMULATOR_COMMAND);
+        //Always start the output thread which chooses which data source to pull from.
+        startOutputThread();
+    }
+
+    /**
+     * Changes the server mode and notifies all listeners.
+     *
+     * @param mode The mode to change to
+     */
+    private static void changeMode(MindwaveServerMode mode) {
+        SERVER_MODE.set(mode);
+        SERVER_STATUS_LISTENERS.parallelStream().forEach(listener -> listener.serverModeUpdate(mode));
     }
 
     /**
      * Starts the thread which calls for output once a second.
      */
-    private void startOutputThread() {
+    private static void startOutputThread() {
         //If TGC, check for data, if none, set to Emulator. If in emulator, check for TGC.
         var thread = new Thread(() -> {
             while (true) {
@@ -255,15 +290,19 @@ public enum MindWaveServer {
                     if (canReachTGC) {
                         outputMindWavePacket(MindwaveServerMode.TGC.getData());
                     } else {
-                        SERVER_MODE.set(MindwaveServerMode.SQUAREWAVE_EMULATED);
+                        changeMode(MindwaveServerMode.SQUAREWAVE_EMULATED);
                         continue;
                     }
                 } else {
                     if (MindwaveServerMode.TGC.isReady()) {
-                        SERVER_MODE.set(MindwaveServerMode.TGC);
-                        continue;
+                        changeMode(MindwaveServerMode.TGC);
                     } else {
-                        outputMindWavePacket(MindwaveServerMode.SQUAREWAVE_EMULATED.getData());
+                        try {
+                            outputMindWavePacket(MindwaveServerMode.SQUAREWAVE_EMULATED.getData());
+                            Thread.sleep(1000);
+                        } catch (InterruptedException ex) {
+                            throw new IllegalStateException("Output thread selector interrupted while sleeping", ex);
+                        }
                     }
                 }
             }
@@ -293,7 +332,7 @@ public enum MindWaveServer {
     private static void outputMindWavePacket(MindWavePacket packet) {
         try {
             //Notify listeners of event change
-            eventListeners.parallelStream().forEach(listener -> listener.mindwaveUpdate(packet));
+            EVENT_LISTENERS.parallelStream().forEach(listener -> listener.mindwaveUpdate(packet));
 
             //Broadcast OSC & RAW UDP Integers
             var oscOut = new OSCPortOut(InetAddress.getLocalHost(), MINDWAVE_SERVER_OSC_BROADCAST);

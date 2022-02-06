@@ -67,7 +67,6 @@ public class Init {
                     //Use Live TGC data
                 } else if (args[1].equalsIgnoreCase("TGC")) {
                     MindWaveServer.start();
-                    MindwaveViewer.initializeUI();
                 } else {
                     printHelpDocAndExit();
                 }

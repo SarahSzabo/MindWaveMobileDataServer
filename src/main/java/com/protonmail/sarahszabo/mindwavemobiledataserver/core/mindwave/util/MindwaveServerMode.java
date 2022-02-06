@@ -5,6 +5,7 @@
 package com.protonmail.sarahszabo.mindwavemobiledataserver.core.mindwave.util;
 
 import com.protonmail.sarahszabo.mindwavemobiledataserver.core.mindwave.MindWavePacket;
+import com.protonmail.sarahszabo.mindwavemobiledataserver.core.mindwave.MindWaveServer;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -20,6 +21,16 @@ public enum MindwaveServerMode {
             return "LIVE: Thinkgear Connector (TGC)";
         }
     }, SQUAREWAVE_EMULATED {
+        @Override
+        public MindWavePacket getData() {
+            return MindWavePacket.generateRandomPacket();
+        }
+
+        @Override
+        public boolean isReady() {
+            return true;
+        }
+
         @Override
         public String toString() {
             return "EEG SQUAREWAVE EMULATOR";
@@ -39,7 +50,7 @@ public enum MindwaveServerMode {
      * @return
      */
     public boolean isReady() {
-        return this.packet.get() == null;
+        return this.packet.get() != null;
     }
 
     /**

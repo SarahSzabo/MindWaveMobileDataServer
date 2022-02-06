@@ -50,12 +50,12 @@
                 <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
               </rowConstraints>
                <children>
-                  <ImageView fx:id="iconImageView" fitHeight="200.0" fitWidth="349.0" pickOnBounds="true" preserveRatio="true">
+                  <ImageView fx:id="iconImageView" fitHeight="200.0" fitWidth="349.0" pickOnBounds="true" preserveRatio="true" GridPane.columnSpan="2147483647">
                      <image>
                         <Image url="@../pictures/KaguyaHime.png" />
                      </image>
                   </ImageView>
-                  <VBox GridPane.rowIndex="1">
+                  <VBox GridPane.columnSpan="2147483647" GridPane.rowIndex="1" GridPane.rowSpan="2147483647">
                      <children>
                         <Label text="Data Source:" textAlignment="CENTER" textFill="WHITE" wrapText="true">
                            <font>
@@ -65,14 +65,14 @@
                               <Insets top="30.0" />
                            </padding>
                         </Label>
-                        <Label fx:id="labelDataSource" minHeight="-Infinity" minWidth="-Infinity" text="NONE" textFill="#1cf552" wrapText="true">
+                        <Label fx:id="labelDataSource" text="NONE" textFill="#1cf552" wrapText="true">
                            <font>
                               <Font size="26.0" />
                            </font>
                         </Label>
                      </children>
                   </VBox>
-                  <VBox GridPane.rowIndex="2">
+                  <VBox GridPane.columnSpan="2147483647" GridPane.rowIndex="2" GridPane.rowSpan="2147483647">
                      <children>
                         <Label minHeight="-Infinity" minWidth="-Infinity" text="EEG Connection Status:" textAlignment="CENTER" textFill="WHITE" wrapText="true">
                            <font>

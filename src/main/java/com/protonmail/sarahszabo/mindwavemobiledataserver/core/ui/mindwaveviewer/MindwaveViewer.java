@@ -10,19 +10,12 @@ import com.protonmail.sarahszabo.mindwavemobiledataserver.core.mindwave.MindWave
 import com.protonmail.sarahszabo.mindwavemobiledataserver.core.mindwave.MindWaveServer;
 import com.protonmail.sarahszabo.mindwavemobiledataserver.core.mindwave.util.MindwaveEventListenerTask;
 import com.protonmail.sarahszabo.mindwavemobiledataserver.core.mindwave.util.MindwaveServerMode;
+import com.protonmail.sarahszabo.mindwavemobiledataserver.core.mindwave.util.MindwaveServerStatusListener;
 import com.protonmail.sarahszabo.mindwavemobiledataserver.core.mindwave.util.MindwaveStatus;
-import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -45,7 +38,7 @@ import javafx.stage.Stage;
  *
  * @author Sarah Szabo <SarahSzabo@Protonmail.com>
  */
-public class MindwaveViewer extends Application {
+public class MindwaveViewer extends Application implements MindwaveServerStatusListener {
 
     /**
      * Starts the UI in it's own controller thread.
@@ -145,13 +138,18 @@ public class MindwaveViewer extends Application {
             stage.getIcons().add(new Image(getClass().getClassLoader().getResourceAsStream("pictures/KaguyaHime.png")));
 
             //Launch Helper Threads
-            initImageChangerThread();
+            startImageChangerThread();
             //eSenseChart.setAnimated(false);
             //brainwaveChart.setAnimated(false);
-            initChartDataListenerThread();
+            startChartDataListenerThread();
             iconImageView.setImage(new Image(getClass().getClassLoader().getResourceAsStream("pictures/KHFinal.png")));
 
             stage.show();
+
+            //Set lables
+            this.labelDataSource.setText(MindWaveServer.currentMode().toString());
+            //Register with mindwave server for changes
+            MindWaveServer.registerServerStatusListener(this);
         } catch (IOException ex) {
             Logger.getLogger(MindwaveViewer.class.getName()).log(Level.SEVERE, null, ex);
             System.err.println("FXML Couldn't Load! " + ex);
@@ -174,12 +172,12 @@ public class MindwaveViewer extends Application {
      * Launches the thread which looks for and changes the image based on the
      * status of the mindwaves.
      */
-    private void initImageChangerThread() {
+    private void startImageChangerThread() {
         MindwaveEventListenerTask.launchMindwaveListenerThread("Mindwave Viewer Image Changer Thread", (var packet) -> {
             try {
                 Thread.sleep(4000);
                 Platform.runLater(() -> imageTo(MindwaveStatus.ATTENTION_DOMINANT));
-                Thread.sleep(4000);
+                Thread.sleep(5000);
                 Platform.runLater(() -> imageTo(MindwaveStatus.DEFAULT));
                 Thread.sleep(4000);
                 Platform.runLater(() -> imageTo(MindwaveStatus.MEDITATION_DOMINANT));
@@ -189,16 +187,10 @@ public class MindwaveViewer extends Application {
         });
     }
 
-    public void changeMode(MindwaveServerMode mode) {
-        Platform.runLater(() -> {
-            this.labelDataSource.setText(mode.toString());
-        });
-    }
-
     /**
      * Initializes the data reader thread.
      */
-    private void initChartDataListenerThread() {
+    private void startChartDataListenerThread() {
         MindwaveEventListenerTask.launchMindwaveListenerThread("Mindwave Viewer Chart Data Listener Thread", (MindWavePacket packet) -> {
             //Assume Server Initialized Already
             /*
@@ -296,5 +288,10 @@ public class MindwaveViewer extends Application {
                 });
             }
         });
+    }
+
+    @Override
+    public void serverModeUpdate(MindwaveServerMode mode) {
+        Platform.runLater(() -> this.labelDataSource.setText(mode.toString()));
     }
 }
