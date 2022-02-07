@@ -33,7 +33,7 @@ public enum MindwaveServerMode {
 
         @Override
         public String toString() {
-            return "EEG SQUAREWAVE EMULATOR";
+            return "EEG WAVE EMULATOR";
         }
     };
 

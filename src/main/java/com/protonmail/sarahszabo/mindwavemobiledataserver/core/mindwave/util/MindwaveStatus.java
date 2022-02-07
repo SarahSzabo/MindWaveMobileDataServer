@@ -20,8 +20,8 @@ public enum MindwaveStatus {
     ATTENTION_DOMINANT {
         @Override
         public List<String> getPicturesFilenames() {
-            var list = new ArrayList<String>(10);
-            for (int i = 0; i < 5; i++) {
+            var list = new ArrayList<String>(30);
+            for (int i = 0; i < 11; i++) {
                 list.add("pictures/mindwave/active/SS" + i + ".gif");
             }
             return list;
@@ -33,9 +33,21 @@ public enum MindwaveStatus {
     MEDITATION_DOMINANT {
         @Override
         public List<String> getPicturesFilenames() {
-            var list = new ArrayList<String>(10);
-            for (int i = 0; i < 4; i++) {
+            var list = new ArrayList<String>(30);
+            for (int i = 0; i < 20; i++) {
                 list.add("pictures/mindwave/passive/MM" + i + ".gif");
+            }
+            return list;
+        }
+    },/**
+     * The flag for when meditation is the dominant waveform.
+     */
+    WINK {
+        @Override
+        public List<String> getPicturesFilenames() {
+            var list = new ArrayList<String>(20);
+            for (int i = 0; i < 5; i++) {
+                list.add("pictures/mindwave/wink/WW" + i + ".gif");
             }
             return list;
         }

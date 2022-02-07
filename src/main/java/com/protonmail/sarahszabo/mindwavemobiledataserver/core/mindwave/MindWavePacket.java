@@ -22,6 +22,37 @@ public class MindWavePacket {
     private static final Logger LOG = Logger.getLogger(MindWavePacket.class.getName());
 
     /**
+     * A static factory for getting a log-based parameterization of the values.
+     * All inputs are first run through the log algorithm (with the exception of
+     * poorSignalLevel.
+     *
+     * @param attention This packet parameter
+     * @param meditation This packet parameter
+     * @param mentalEffort This packet parameter
+     * @param familiarity This packet parameter
+     * @param delta This packet parameter
+     * @param theta This packet parameter
+     * @param lowAlpha This packet parameter
+     * @param highAlpha This packet parameter
+     * @param lowBeta This packet parameter
+     * @param highBeta This packet parameter
+     * @param lowGamma This packet parameter
+     * @param highGamma This packet parameter
+     * @param blinkStrength This packet parameter
+     * @param poorSignalLevel This packet parameter
+     * @return The easily graphable mindwave packet
+     */
+    public static MindWavePacket generateEasyGraphPacket(int attention, int meditation, int mentalEffort, int familiarity, int delta,
+            int theta, int lowAlpha, int highAlpha, int lowBeta, int highBeta, int lowGamma,
+            int highGamma, int blinkStrength, int poorSignalLevel) {
+        //
+        return new MindWavePacket(attention, meditation, mentalEffort, familiarity, (int) Math.log(delta), (int) Math.log(theta),
+                (int) Math.log(lowAlpha), (int) Math.log(highAlpha), (int) Math.log(lowBeta), (int) Math.log(highBeta),
+                (int) Math.log(lowGamma), (int) Math.log(highGamma), blinkStrength, poorSignalLevel);
+
+    }
+
+    /**
      * Generates a random brainwave packet with the default scaling.
      *
      * @return The randomly generated packet
@@ -49,7 +80,7 @@ public class MindWavePacket {
     private final LocalTime creationTime;
 
     private final boolean isBlinkOnly, hasESense;
-    private final ThinkGearServerConnectionQuality isPoorConnectionQuality;
+    private final ThinkGearServerConnectionQuality connectionQuality;
 
     /**
      * The default value for all fields of the "double" type.
@@ -102,13 +133,13 @@ public class MindWavePacket {
         this.isBlinkOnly = (this.highAlpha == 0) && (this.attention == 0) && (this.meditation == 0);
         this.hasESense = (this.attention != 0) && (this.meditation != 0);
         if (this.poorSignalLevel == 0) {
-            this.isPoorConnectionQuality = ThinkGearServerConnectionQuality.OPTIMAL;
+            this.connectionQuality = ThinkGearServerConnectionQuality.OPTIMAL;
         } else if (this.poorSignalLevel > 0 && this.poorSignalLevel <= 50) {
-            this.isPoorConnectionQuality = ThinkGearServerConnectionQuality.SUB_OPTIMAL;
+            this.connectionQuality = ThinkGearServerConnectionQuality.SUB_OPTIMAL;
         } else if (this.poorSignalLevel > 50 && this.poorSignalLevel < 200) {
-            this.isPoorConnectionQuality = ThinkGearServerConnectionQuality.POOR;
+            this.connectionQuality = ThinkGearServerConnectionQuality.POOR;
         } else {
-            this.isPoorConnectionQuality = ThinkGearServerConnectionQuality.DISCONNECTED;
+            this.connectionQuality = ThinkGearServerConnectionQuality.DISCONNECTED;
         }
     }
 
@@ -184,13 +215,13 @@ public class MindWavePacket {
         this.isBlinkOnly = (this.highAlpha == 0) && (this.attention == 0) && (this.meditation == 0);
         this.hasESense = (this.attention != 0) && (this.meditation != 0);
         if (this.poorSignalLevel == 0) {
-            this.isPoorConnectionQuality = ThinkGearServerConnectionQuality.OPTIMAL;
+            this.connectionQuality = ThinkGearServerConnectionQuality.OPTIMAL;
         } else if (this.poorSignalLevel > 0 && this.poorSignalLevel <= 50) {
-            this.isPoorConnectionQuality = ThinkGearServerConnectionQuality.SUB_OPTIMAL;
+            this.connectionQuality = ThinkGearServerConnectionQuality.SUB_OPTIMAL;
         } else if (this.poorSignalLevel > 50 && this.poorSignalLevel < 200) {
-            this.isPoorConnectionQuality = ThinkGearServerConnectionQuality.POOR;
+            this.connectionQuality = ThinkGearServerConnectionQuality.POOR;
         } else {
-            this.isPoorConnectionQuality = ThinkGearServerConnectionQuality.DISCONNECTED;
+            this.connectionQuality = ThinkGearServerConnectionQuality.DISCONNECTED;
         }
     }
 
@@ -200,7 +231,7 @@ public class MindWavePacket {
      * @return The version of this packet that is easily graph-able
      */
     public MindWavePacket toEasyGraphPacket() {
-        return new MindWaveEasyGraphPacket(this.attention, this.meditation, this.mentalEffort, this.familiarity,
+        return generateEasyGraphPacket(this.attention, this.meditation, this.mentalEffort, this.familiarity,
                 this.delta, this.theta, this.lowAlpha, this.highAlpha, this.lowBeta, this.highBeta,
                 this.lowGamma, this.highGamma, this.blinkStrength, this.poorSignalLevel);
     }
@@ -377,8 +408,8 @@ public class MindWavePacket {
      *
      * @return This field
      */
-    public ThinkGearServerConnectionQuality isPoorConnectionQuality() {
-        return this.isPoorConnectionQuality;
+    public ThinkGearServerConnectionQuality getConnectionQuality() {
+        return this.connectionQuality;
     }
 
     /**

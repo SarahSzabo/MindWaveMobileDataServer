@@ -12,8 +12,10 @@ import com.protonmail.sarahszabo.mindwavemobiledataserver.core.mindwave.util.Min
 import com.protonmail.sarahszabo.mindwavemobiledataserver.core.mindwave.util.MindwaveServerMode;
 import com.protonmail.sarahszabo.mindwavemobiledataserver.core.mindwave.util.MindwaveServerStatusListener;
 import com.protonmail.sarahszabo.mindwavemobiledataserver.core.mindwave.util.MindwaveStatus;
+import com.protonmail.sarahszabo.mindwavemobiledataserver.core.mindwave.util.ThinkGearServerConnectionQuality;
 import java.io.IOException;
 import java.util.Random;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Application;
@@ -94,21 +96,46 @@ public class MindwaveViewer extends Application implements MindwaveServerStatusL
     }
 
     /**
-     * Changes the stage icon view to an appropriate response to the current
+     * Changes the stage's icon view to an appropriate response to the current
      * {@link MindwaveStatus}. If default is used, this resets to the normal
-     * picture.
+     * picture. After changing the image to the desired one and waiting the wait
+     * period, changes the picture back to default.
+     *
+     * @param status The status the mindwaves are currently in
+     * @param wait The number of milliseconds to wait in between the changed
+     * image and the default image change. Need not be called from the Platform
+     * thread.
+     */
+    private void imageToAndWaitToDefault(MindwaveStatus status, int wait) {
+        try {
+            imageTo(status);
+            Thread.sleep(wait);
+            imageTo(MindwaveStatus.DEFAULT);
+        } catch (InterruptedException ex) {
+            throw new IllegalStateException("Image changer thread interrupted while sleeping");
+        }
+    }
+
+    /**
+     * Changes the stage's icon view to an appropriate response to the current
+     * {@link MindwaveStatus}. If default is used, this resets to the normal
+     * picture. Need not be called from the Platform thread.
      *
      * @param status The status the mindwaves are currently in
      */
     private void imageTo(MindwaveStatus status) {
         if (status == MindwaveStatus.ATTENTION_DOMINANT) {
-            this.iconImageView.setImage(new Image(getClass().getClassLoader()
-                    .getResource(getRandomImageFromPackage(MindwaveStatus.ATTENTION_DOMINANT)).toString()));
+            Platform.runLater(() -> this.iconImageView.setImage(new Image(getClass().getClassLoader()
+                    .getResource(getRandomImageFromPackage(MindwaveStatus.ATTENTION_DOMINANT)).toString())));
         } else if (status == MindwaveStatus.MEDITATION_DOMINANT) {
-            this.iconImageView.setImage(new Image(getClass().getClassLoader()
-                    .getResource(getRandomImageFromPackage(MindwaveStatus.MEDITATION_DOMINANT)).toString()));
+            Platform.runLater(() -> this.iconImageView.setImage(new Image(getClass().getClassLoader()
+                    .getResource(getRandomImageFromPackage(MindwaveStatus.MEDITATION_DOMINANT)).toString())));
+        } else if (status == MindwaveStatus.WINK) {
+            Platform.runLater(() -> this.iconImageView.setImage(new Image(getClass().getClassLoader()
+                    .getResource(getRandomImageFromPackage(MindwaveStatus.WINK)).toString())));
         } else {
-            this.iconImageView.setImage(new Image(getClass().getClassLoader().getResourceAsStream("pictures/KHFinal.png")));
+            Platform.runLater(() -> this.iconImageView.setImage(new Image(getClass().getClassLoader()
+                    .getResourceAsStream("pictures/KHFinal.png"))));
         }
     }
 
@@ -169,20 +196,76 @@ public class MindwaveViewer extends Application implements MindwaveServerStatusL
     }
 
     /**
+     * Handles the blink behaviour of the image changer thread. Call this
+     * whenever a probabilistic blink needs to occur; will handle the
+     * probability and make the determination and execute the blink.
+     *
+     * @param random The source of randomness
+     * @param packet The packet to use
+     */
+    private void handleBlinkImageBehavious(Random random, MindWavePacket packet) {
+        //Do a random blink probabilistically
+        int number = random.nextInt(1000), gate = 70;
+        //Do a different probability if blinking continuously
+        if (packet.getConnectionQuality() == ThinkGearServerConnectionQuality.DISCONNECTED) {
+            gate = 30;
+        }
+        if (number <= gate) {
+            imageToAndWaitToDefault(MindwaveStatus.WINK, 1500);
+        }
+    }
+
+    /**
      * Launches the thread which looks for and changes the image based on the
      * status of the mindwaves.
      */
     private void startImageChangerThread() {
-        MindwaveEventListenerTask.launchMindwaveListenerThread("Mindwave Viewer Image Changer Thread", (var packet) -> {
-            try {
-                Thread.sleep(4000);
-                Platform.runLater(() -> imageTo(MindwaveStatus.ATTENTION_DOMINANT));
-                Thread.sleep(5000);
-                Platform.runLater(() -> imageTo(MindwaveStatus.DEFAULT));
-                Thread.sleep(4000);
-                Platform.runLater(() -> imageTo(MindwaveStatus.MEDITATION_DOMINANT));
-            } catch (InterruptedException ex) {
-                Logger.getLogger(MindwaveViewer.class.getName()).log(Level.SEVERE, null, ex);
+        //Has to be annonymous inner class to keep track of state
+        MindwaveEventListenerTask.launchMindwaveListenerThread("Mindwave Viewer Image Changer Thread", new Consumer<MindWavePacket>() {
+            private int numberOfHighAttentionsInRow = 0, numberOfHighMeditationsInRow = 0, ignoreQueue = 0;
+            private boolean displayedImage = false;
+            private Random random = new Random();
+
+            @Override
+            public void accept(MindWavePacket packet) {
+                //Ignore every 5 images if we just displayed one, else reset queue and fall through
+                if (this.displayedImage) {
+                    if (this.ignoreQueue < 5) {
+                        this.ignoreQueue++;
+                        this.numberOfHighAttentionsInRow = 0;
+                        this.numberOfHighMeditationsInRow = 0;
+                        return;
+                    } else {
+                        this.ignoreQueue = 0;
+                        this.displayedImage = false;
+                    }
+                }
+                if (!packet.isBlinkOnly()) {
+                    //For both, either increment or set to 0 every time
+                    int gateLevel = 80, timesInRowForTrigger = 2;
+                    if (packet.getAttention() >= gateLevel) {
+                        this.numberOfHighAttentionsInRow++;
+                    } else {
+                        this.numberOfHighAttentionsInRow = 0;
+                    }
+                    if (packet.getMeditation() >= gateLevel) {
+                        this.numberOfHighMeditationsInRow++;
+                    } else {
+                        this.numberOfHighMeditationsInRow = 0;
+                    }
+                    //Checks for changing image conditions
+                    if (this.numberOfHighAttentionsInRow >= timesInRowForTrigger) {
+                        this.displayedImage = true;
+                        imageToAndWaitToDefault(MindwaveStatus.ATTENTION_DOMINANT, 5000);
+                    } else if (this.numberOfHighMeditationsInRow >= timesInRowForTrigger) {
+                        this.displayedImage = true;
+                        imageToAndWaitToDefault(MindwaveStatus.MEDITATION_DOMINANT, 5000);
+                    } else if (packet.getBlinkStrength() > 0) {
+                        handleBlinkImageBehavious(this.random, packet);
+                    }
+                } else {
+                    handleBlinkImageBehavious(this.random, packet);
+                }
             }
         });
     }
@@ -284,7 +367,7 @@ public class MindwaveViewer extends Application implements MindwaveServerStatusL
                     }
 
                     //Do other listener stuff
-                    this.labelEEGConnectionStatus.setText(packet.isPoorConnectionQuality().toString());
+                    this.labelEEGConnectionStatus.setText(packet.getConnectionQuality().toString());
                 });
             }
         });
