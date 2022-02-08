@@ -33,6 +33,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
+import javafx.scene.paint.Paint;
 import javafx.stage.Stage;
 
 /**
@@ -203,12 +204,12 @@ public class MindwaveViewer extends Application implements MindwaveServerStatusL
      * @param random The source of randomness
      * @param packet The packet to use
      */
-    private void handleBlinkImageBehavious(Random random, MindWavePacket packet) {
+    private void handleBlinkImageBehaviour(Random random, MindWavePacket packet) {
         //Do a random blink probabilistically
-        int number = random.nextInt(1000), gate = 70;
+        int number = random.nextInt(1000), gate = 100;
         //Do a different probability if blinking continuously
         if (packet.getConnectionQuality() == ThinkGearServerConnectionQuality.DISCONNECTED) {
-            gate = 30;
+            gate = 20;
         }
         if (number <= gate) {
             imageToAndWaitToDefault(MindwaveStatus.WINK, 1500);
@@ -261,10 +262,10 @@ public class MindwaveViewer extends Application implements MindwaveServerStatusL
                         this.displayedImage = true;
                         imageToAndWaitToDefault(MindwaveStatus.MEDITATION_DOMINANT, 5000);
                     } else if (packet.getBlinkStrength() > 0) {
-                        handleBlinkImageBehavious(this.random, packet);
+                        handleBlinkImageBehaviour(this.random, packet);
                     }
                 } else {
-                    handleBlinkImageBehavious(this.random, packet);
+                    handleBlinkImageBehaviour(this.random, packet);
                 }
             }
         });
@@ -368,6 +369,12 @@ public class MindwaveViewer extends Application implements MindwaveServerStatusL
 
                     //Do other listener stuff
                     this.labelEEGConnectionStatus.setText(packet.getConnectionQuality().toString());
+                    //Set EEG status to red if disconnected
+                    if (packet.getConnectionQuality() == ThinkGearServerConnectionQuality.DISCONNECTED) {
+                        this.labelEEGConnectionStatus.setTextFill(Paint.valueOf("Red"));
+                    } else {
+                        this.labelEEGConnectionStatus.setTextFill(Paint.valueOf("Green"));
+                    }
                 });
             }
         });

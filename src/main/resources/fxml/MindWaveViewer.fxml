@@ -65,7 +65,7 @@
                               <Insets top="30.0" />
                            </padding>
                         </Label>
-                        <Label fx:id="labelDataSource" text="NONE" textFill="#1cf552" wrapText="true">
+                        <Label fx:id="labelDataSource" text="NONE" textFill="#00ff3c" wrapText="true">
                            <font>
                               <Font size="26.0" />
                            </font>
@@ -79,7 +79,7 @@
                               <Font size="26.0" />
                            </font>
                         </Label>
-                        <Label fx:id="labelEEGConnectionStatus" minHeight="-Infinity" minWidth="-Infinity" text="DISCONNECTED" textFill="#1cf552" wrapText="true">
+                        <Label fx:id="labelEEGConnectionStatus" minHeight="-Infinity" minWidth="-Infinity" text="DISCONNECTED" textFill="RED" wrapText="true">
                            <font>
                               <Font size="26.0" />
                            </font>

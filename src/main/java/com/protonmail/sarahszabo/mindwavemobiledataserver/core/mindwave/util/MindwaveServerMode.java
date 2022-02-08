@@ -5,7 +5,6 @@
 package com.protonmail.sarahszabo.mindwavemobiledataserver.core.mindwave.util;
 
 import com.protonmail.sarahszabo.mindwavemobiledataserver.core.mindwave.MindWavePacket;
-import com.protonmail.sarahszabo.mindwavemobiledataserver.core.mindwave.MindWaveServer;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**

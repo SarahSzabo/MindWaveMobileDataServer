@@ -224,8 +224,8 @@ public enum MindWaveServer {
                                 System.out.println("JSON TEXT RAW: \n\n" + sourceJson);
                                 try {
                                     var newPacket = new MindWavePacket(sourceJson);
+                                    //ServerMode Uplink for the selector to see
                                     MindwaveServerMode.TGC.setData(newPacket);
-                                    //TODO Atomic Reference
                                 } catch (JSONException je) {
                                     System.err.println("JSON Exception Caught, Continuing Loop");
                                 }
@@ -278,9 +278,11 @@ public enum MindWaveServer {
                     for (int i = 0; i < 12; i++) {
                         if (MindwaveServerMode.TGC.isReady()) {
                             canReachTGC = true;
+                            //Break out of counting loop
                             break;
                         } else {
                             try {
+                                canReachTGC = false;
                                 Thread.sleep(333);
                             } catch (InterruptedException ex) {
                                 throw new IllegalStateException("Output thread selector interrupted while sleeping", ex);
@@ -291,7 +293,6 @@ public enum MindWaveServer {
                         outputMindWavePacket(MindwaveServerMode.TGC.getData());
                     } else {
                         changeMode(MindwaveServerMode.SQUAREWAVE_EMULATED);
-                        continue;
                     }
                 } else {
                     if (MindwaveServerMode.TGC.isReady()) {
