@@ -34,7 +34,7 @@ public enum ThinkGearServerConnectionQuality {
     ATTEMPTING_CONNECTION_SCANNING {
         @Override
         public String toString() {
-            return "EEG ATTEMPING CONNECTION (SCANNING)";
+            return "TGC EEG Scanning for Headset";
         }
     };
 

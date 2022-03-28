@@ -373,7 +373,7 @@ public class MindwaveViewer extends Application implements MindwaveServerStatusL
                     if (packet.getConnectionQuality() == ThinkGearServerConnectionQuality.DISCONNECTED) {
                         this.labelEEGConnectionStatus.setTextFill(Paint.valueOf("Red"));
                     } else if (packet.getConnectionQuality() == ThinkGearServerConnectionQuality.ATTEMPTING_CONNECTION_SCANNING) {
-                        this.labelEEGConnectionStatus.setTextFill(Paint.valueOf("Blue"));
+                        this.labelEEGConnectionStatus.setTextFill(Paint.valueOf("Cyan"));
                     } else {
                         this.labelEEGConnectionStatus.setTextFill(Paint.valueOf("LIME"));
                     }

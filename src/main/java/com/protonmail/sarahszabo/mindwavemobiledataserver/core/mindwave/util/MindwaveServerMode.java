@@ -5,6 +5,7 @@
 package com.protonmail.sarahszabo.mindwavemobiledataserver.core.mindwave.util;
 
 import com.protonmail.sarahszabo.mindwavemobiledataserver.core.mindwave.MindWavePacket;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -21,7 +22,7 @@ public enum MindwaveServerMode {
         }
     }, SQUAREWAVE_EMULATED {
         @Override
-        public MindWavePacket getData() {
+        public MindWavePacket getDataAndDestroy() {
             return MindWavePacket.generateRandomPacket();
         }
 
@@ -56,11 +57,12 @@ public enum MindwaveServerMode {
     }
 
     /**
-     * Gets the data if available; null otherwise.
+     * Gets the data if available; null otherwise. Destroys the current data
+     * element.
      *
      * @return The data
      */
-    public MindWavePacket getData() {
+    public MindWavePacket getDataAndDestroy() {
         synchronized (this) {
             var packet = this.packet.get();
             this.packet.set(null);
@@ -68,7 +70,21 @@ public enum MindwaveServerMode {
         }
     }
 
-    ;
+    /**
+     * Gets the data if available; null otherwise.
+     *
+     * @return The data
+     */
+    public Optional<MindWavePacket> getData() {
+        synchronized (this) {
+            if (this.packet.get() != null) {
+                return Optional.of(this.packet.get());
+            } else {
+                return Optional.empty();
+            }
+
+        }
+    }
 
     /**
      * Sets the data for this server mode.

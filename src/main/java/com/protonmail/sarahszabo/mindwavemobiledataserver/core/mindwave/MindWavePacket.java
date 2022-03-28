@@ -5,6 +5,7 @@
  */
 package com.protonmail.sarahszabo.mindwavemobiledataserver.core.mindwave;
 
+import com.protonmail.sarahszabo.mindwavemobiledataserver.core.mindwave.util.MindwaveServerMode;
 import com.protonmail.sarahszabo.mindwavemobiledataserver.core.mindwave.util.ThinkGearServerConnectionQuality;
 import java.time.LocalTime;
 import java.util.Random;
@@ -135,11 +136,11 @@ public class MindWavePacket {
         this.isBlinkOnly = (this.highAlpha == 0) && (this.attention == 0) && (this.meditation == 0);
         this.hasESense = (this.attention != 0) && (this.meditation != 0);
 
-        //We define a scanning packet as something that is blink only, but without a blink
-        //Also handles connection quality issues
-        if (this.isBlinkOnly && this.blinkStrength == 0) {
-            this.isScanningPacket = true;
-            this.connectionQuality = ThinkGearServerConnectionQuality.ATTEMPTING_CONNECTION_SCANNING;
+        //If TGC Data available, copy scanning status and connection status
+        var tgcData = MindwaveServerMode.TGC.getData();
+        if (tgcData.isPresent()) {
+            this.connectionQuality = tgcData.get().getConnectionQuality();
+            this.isScanningPacket = tgcData.get().isScanningPacket();
         } else {
             this.isScanningPacket = false;
             //Poor signal level definitions
@@ -225,8 +226,19 @@ public class MindWavePacket {
             if (status.equalsIgnoreCase("scanning")) {
             }
             this.isScanningPacket = true;
+            this.connectionQuality = ThinkGearServerConnectionQuality.ATTEMPTING_CONNECTION_SCANNING;
         } else {
             this.isScanningPacket = false;
+            //Since this isn't a scanning packet, follow typical workflow
+            if (this.poorSignalLevel == 0) {
+                this.connectionQuality = ThinkGearServerConnectionQuality.OPTIMAL;
+            } else if (this.poorSignalLevel > 0 && this.poorSignalLevel <= 50) {
+                this.connectionQuality = ThinkGearServerConnectionQuality.SUB_OPTIMAL;
+            } else if (this.poorSignalLevel > 50 && this.poorSignalLevel < 200) {
+                this.connectionQuality = ThinkGearServerConnectionQuality.POOR;
+            } else {
+                this.connectionQuality = ThinkGearServerConnectionQuality.DISCONNECTED;
+            }
         }
         /*
         We consider this a "Blink Only" packet if basically everything is 0, set values according to TGC Spec
@@ -236,15 +248,6 @@ public class MindWavePacket {
          */
         this.isBlinkOnly = (this.highAlpha == 0) && (this.attention == 0) && (this.meditation == 0);
         this.hasESense = (this.attention != 0) && (this.meditation != 0);
-        if (this.poorSignalLevel == 0) {
-            this.connectionQuality = ThinkGearServerConnectionQuality.OPTIMAL;
-        } else if (this.poorSignalLevel > 0 && this.poorSignalLevel <= 50) {
-            this.connectionQuality = ThinkGearServerConnectionQuality.SUB_OPTIMAL;
-        } else if (this.poorSignalLevel > 50 && this.poorSignalLevel < 200) {
-            this.connectionQuality = ThinkGearServerConnectionQuality.POOR;
-        } else {
-            this.connectionQuality = ThinkGearServerConnectionQuality.DISCONNECTED;
-        }
     }
 
     /**

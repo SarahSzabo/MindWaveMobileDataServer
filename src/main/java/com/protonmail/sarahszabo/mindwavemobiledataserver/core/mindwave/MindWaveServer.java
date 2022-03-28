@@ -290,7 +290,7 @@ public enum MindWaveServer {
                         }
                     }
                     if (canReachTGC) {
-                        outputMindWavePacket(MindwaveServerMode.TGC.getData());
+                        outputMindWavePacket(MindwaveServerMode.TGC.getDataAndDestroy());
                     } else {
                         changeMode(MindwaveServerMode.SQUAREWAVE_EMULATED);
                     }
@@ -299,7 +299,7 @@ public enum MindWaveServer {
                         changeMode(MindwaveServerMode.TGC);
                     } else {
                         try {
-                            outputMindWavePacket(MindwaveServerMode.SQUAREWAVE_EMULATED.getData());
+                            outputMindWavePacket(MindwaveServerMode.SQUAREWAVE_EMULATED.getDataAndDestroy());
                             Thread.sleep(1000);
                         } catch (InterruptedException ex) {
                             throw new IllegalStateException("Output thread selector interrupted while sleeping", ex);
