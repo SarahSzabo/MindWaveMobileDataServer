@@ -27,5 +27,19 @@ public enum ThinkGearServerConnectionQuality {
     /**
      * Disconnected; No EEG Data; alter probe position.
      */
-    DISCONNECTED;
+    DISCONNECTED,
+    /**
+     * Attempting connection to EEG headset.
+     */
+    ATTEMPTING_CONNECTION_SCANNING {
+        @Override
+        public String toString() {
+            return "EEG ATTEMPING CONNECTION (SCANNING)";
+        }
+    };
+
+    @Override
+    public String toString() {
+        return name();
+    }
 }

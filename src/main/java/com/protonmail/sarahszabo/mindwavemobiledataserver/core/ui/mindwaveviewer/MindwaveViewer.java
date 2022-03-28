@@ -265,7 +265,7 @@ public class MindwaveViewer extends Application implements MindwaveServerStatusL
                         handleBlinkImageBehaviour(this.random, packet);
                     }
                 } else {
-                    handleBlinkImageBehaviour(this.random, packet);
+                    //handleBlinkImageBehaviour(this.random, packet);
                 }
             }
         });
@@ -372,8 +372,10 @@ public class MindwaveViewer extends Application implements MindwaveServerStatusL
                     //Set EEG status to red if disconnected
                     if (packet.getConnectionQuality() == ThinkGearServerConnectionQuality.DISCONNECTED) {
                         this.labelEEGConnectionStatus.setTextFill(Paint.valueOf("Red"));
+                    } else if (packet.getConnectionQuality() == ThinkGearServerConnectionQuality.ATTEMPTING_CONNECTION_SCANNING) {
+                        this.labelEEGConnectionStatus.setTextFill(Paint.valueOf("Blue"));
                     } else {
-                        this.labelEEGConnectionStatus.setTextFill(Paint.valueOf("Green"));
+                        this.labelEEGConnectionStatus.setTextFill(Paint.valueOf("LIME"));
                     }
                 });
             }

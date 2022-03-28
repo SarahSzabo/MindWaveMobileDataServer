@@ -44,12 +44,15 @@ public enum MindwaveServerMode {
 
     /**
      * Represents whether or not this server mode is ready to provide data or
-     * not.
+     * not. Returns true if not null and false if is a scanning packet.
      *
-     * @return
+     * @return Only return true if not null AND not scanning
      */
     public boolean isReady() {
-        return this.packet.get() != null;
+        //TODO Condense this into a single expression
+        var packet = this.packet.get();
+        ///Only return true if not null AND not scanning
+        return packet != null && !packet.isScanningPacket();
     }
 
     /**

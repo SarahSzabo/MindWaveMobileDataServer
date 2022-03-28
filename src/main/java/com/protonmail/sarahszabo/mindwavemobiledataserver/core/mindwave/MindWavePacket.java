@@ -79,7 +79,7 @@ public class MindWavePacket {
             lowAlpha, highAlpha, lowBeta, highBeta, lowGamma, highGamma, blinkStrength, poorSignalLevel;
     private final LocalTime creationTime;
 
-    private final boolean isBlinkOnly, hasESense;
+    private final boolean isBlinkOnly, hasESense, isScanningPacket;
     private final ThinkGearServerConnectionQuality connectionQuality;
 
     /**
@@ -124,6 +124,8 @@ public class MindWavePacket {
         this.poorSignalLevel = poorSignalLevel;
 
         this.creationTime = LocalTime.now();
+
+        //TODO: Fix how these values are defined, and instead define them based on whether or not the JSON has these fields
         /*
         We consider this a "Blink Only" packet if basically everything is 0, set values according to TGC Spec
         Values are 0-200
@@ -132,14 +134,24 @@ public class MindWavePacket {
          */
         this.isBlinkOnly = (this.highAlpha == 0) && (this.attention == 0) && (this.meditation == 0);
         this.hasESense = (this.attention != 0) && (this.meditation != 0);
-        if (this.poorSignalLevel == 0) {
-            this.connectionQuality = ThinkGearServerConnectionQuality.OPTIMAL;
-        } else if (this.poorSignalLevel > 0 && this.poorSignalLevel <= 50) {
-            this.connectionQuality = ThinkGearServerConnectionQuality.SUB_OPTIMAL;
-        } else if (this.poorSignalLevel > 50 && this.poorSignalLevel < 200) {
-            this.connectionQuality = ThinkGearServerConnectionQuality.POOR;
+
+        //We define a scanning packet as something that is blink only, but without a blink
+        //Also handles connection quality issues
+        if (this.isBlinkOnly && this.blinkStrength == 0) {
+            this.isScanningPacket = true;
+            this.connectionQuality = ThinkGearServerConnectionQuality.ATTEMPTING_CONNECTION_SCANNING;
         } else {
-            this.connectionQuality = ThinkGearServerConnectionQuality.DISCONNECTED;
+            this.isScanningPacket = false;
+            //Poor signal level definitions
+            if (this.poorSignalLevel == 0) {
+                this.connectionQuality = ThinkGearServerConnectionQuality.OPTIMAL;
+            } else if (this.poorSignalLevel > 0 && this.poorSignalLevel <= 50) {
+                this.connectionQuality = ThinkGearServerConnectionQuality.SUB_OPTIMAL;
+            } else if (this.poorSignalLevel > 50 && this.poorSignalLevel < 200) {
+                this.connectionQuality = ThinkGearServerConnectionQuality.POOR;
+            } else {
+                this.connectionQuality = ThinkGearServerConnectionQuality.DISCONNECTED;
+            }
         }
     }
 
@@ -206,6 +218,16 @@ public class MindWavePacket {
             this.familiarity = MINDWAVE_DEFAULT_NULL_VALUE;
         }
 
+        //Check if this is a scanning packet
+        if (packet.has("status")) {
+            var status = packet.getString("status");
+            //TODO Add detailed scnaning information
+            if (status.equalsIgnoreCase("scanning")) {
+            }
+            this.isScanningPacket = true;
+        } else {
+            this.isScanningPacket = false;
+        }
         /*
         We consider this a "Blink Only" packet if basically everything is 0, set values according to TGC Spec
         Values are 0-200
@@ -392,6 +414,15 @@ public class MindWavePacket {
      */
     public LocalTime getCreationTime() {
         return this.creationTime;
+    }
+
+    /**
+     * Gets this field
+     *
+     * @return This field
+     */
+    public boolean isScanningPacket() {
+        return this.isScanningPacket;
     }
 
     /**

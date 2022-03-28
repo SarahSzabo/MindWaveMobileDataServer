@@ -202,7 +202,7 @@ public enum MindWaveServer {
             while (true) {
                 try {
                     System.out.println("Connecting to host = " + LOCAL_HOST + ", port = " + THINKGEAR_PORT);
-                    try (var mindwaveSocket = new Socket(LOCAL_HOST, THINKGEAR_PORT)) {
+                    try ( var mindwaveSocket = new Socket(LOCAL_HOST, THINKGEAR_PORT)) {
                         //Define variables
                         var mindwaveInput = mindwaveSocket.getInputStream();
                         var mindwaveReader = new BufferedReader(new InputStreamReader(mindwaveInput, Charset.forName("UTF-8")));
@@ -240,7 +240,7 @@ public enum MindWaveServer {
                     System.out.println("Connection to ThinkGear Connector Dropped \nAttempting Reconnection");
                     Thread.sleep(33);
                 } catch (InterruptedException ex) {
-                    throw new IllegalStateException("TGC authorization thrad interrupted while sleeping", ex);
+                    throw new IllegalStateException("TGC authorization thread interrupted while sleeping", ex);
                 }
             }
         }, "TGC Live Data Connect/Decode/Export Thread");
